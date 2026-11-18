@@ -90,8 +90,12 @@ All but main use the preview DB.
   exact words. Coordinates come from Wikidata, or are left out.
 - **Dates.** EDTF with astronomical years. Prefer `{ year, era: "BCE" }` input.
 - **UI.**
-  - Follow `docs/visual.md`: colour carries meaning (indigo is evidence and time, sandstone is place, turmeric is
-    contested, madder is refuted, sage is a person's confirmation), evidence sits in fields, and there are no card
-    grids, pills, ALL-CAPS labels, middle-dot meta strings or arrows on links.
+  - Follow `docs/visual.md` ("dyed in indigo"): indigo is the brand, the ink and evidence/time; sandstone is place,
+    turmeric is contested or waiting on you, madder is refuted, sage is a person's confirmation. The slab
+    (`.on-slab`) is only the top bar, the footer and the home opening.
+  - Two voices: Anek (`font-heading`, `font-display`, `font-sans`) for titles, names, labels and numbers; Tiro
+    (`font-serif`) for prose, claims, quotations and questions. Check IAST glyph coverage before adopting any font.
+  - Evidence sits in fields; no card grids, ALL-CAPS labels, middle-dot meta strings, arrows on links or monospace
+    data. Radii: 3px cut, 8px pressed, 14px floating; pills only in shell navigation.
   - Maps and side panels never move on scroll; they change only when the reader asks.
   - Copy is plain and sentence case, in the reader's words (`apps/web/lib/labels.ts`).
