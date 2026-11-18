@@ -378,7 +378,7 @@ function PersonRow({
           <EntityThumb image={p.image} size={40} decorative />
         ) : (
           <span
-            className="flex size-10 items-center justify-center rounded-md bg-indigo-wash font-serif text-lg text-indigo"
+            className="flex size-10 items-center justify-center rounded-md bg-indigo-wash font-heading text-lg text-indigo"
             lang={initial.lang}
             aria-hidden
           >

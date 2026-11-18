@@ -84,7 +84,7 @@ export default async function ConnectPage() {
               recent
               limit={3}
               title="Latest notes from your AI"
-              headingClassName="font-serif text-xl font-normal"
+              headingClassName="font-heading text-xl"
               className="order-3"
             />
           </div>

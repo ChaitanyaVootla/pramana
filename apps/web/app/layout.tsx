@@ -1,28 +1,35 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { Inter, Noto_Sans_Brahmi, Tiro_Devanagari_Sanskrit } from "next/font/google";
-import Link from "next/link";
+import { Anek_Devanagari, Anek_Latin, Noto_Sans_Brahmi, Tiro_Devanagari_Sanskrit } from "next/font/google";
 import { getPresence, getStats, getUserView, humanContext } from "@pramana/services";
 import { BottomNav } from "@/components/shell/BottomNav";
-import { Frame } from "@/components/shell/Frame";
 import { Providers } from "@/components/shell/Providers";
 import { ThemeColor } from "@/components/shell/ThemeColor";
 import { Appearance } from "@/components/shell/Appearance";
 import { APPEARANCE_COOKIE, appearanceAttributes, parseAppearance } from "@/components/shell/appearance-settings";
+import { SiteFooter } from "@/components/shell/SiteFooter";
 import { TopBar } from "@/components/shell/TopBar";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
 /*
- * Type (docs/visual.md): Tiro Devanagari Sanskrit for display, reading and
- * Devanagari. Its Latin was drawn for romanised Sanskrit beside its Devanagari,
- * so a bilingual title is one voice, and every IAST mark (ā ī ū ṛ ṅ ñ ṭ ḍ ṇ ś ṣ
- * ḥ ṃ) is a designed glyph (verified by rendering). Inter for the interface;
- * Noto Sans Brahmi for the wordmark.
+ * Type (docs/visual.md): two voices. Anek Latin, with Anek Devanagari beside
+ * it, is the platform speaking: titles, navigation, labels and numbers, drawn
+ * narrow and firm for titles (its width axis). Tiro Devanagari Sanskrit is
+ * history speaking: prose, claims and quotations, with the Devanagari in them.
+ * Both carry every IAST mark (ā ī ū ṛ ṅ ñ ṭ ḍ ṇ ś ṣ ḥ ṃ) as a designed glyph
+ * (verified by rendering). Noto Sans Brahmi for the wordmark.
  */
-const inter = Inter({
+const anek = Anek_Latin({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-inter",
+  axes: ["wdth"],
+  variable: "--font-anek",
+  display: "swap",
+});
+const anekDeva = Anek_Devanagari({
+  subsets: ["devanagari"],
+  axes: ["wdth"],
+  variable: "--font-anek-deva",
   display: "swap",
 });
 const tiro = Tiro_Devanagari_Sanskrit({
@@ -46,14 +53,14 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "Pramāṇa", statusBarStyle: "default" },
 };
 
-/* PWA-ready: edge-to-edge on notched phones; the chrome follows the ground colour. */
+/* PWA-ready: edge-to-edge on notched phones; the browser chrome follows the slab (the top bar). */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f3f2ee" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f1015" },
+    { media: "(prefers-color-scheme: light)", color: "#151b66" },
+    { media: "(prefers-color-scheme: dark)", color: "#191f70" },
   ],
 };
 
@@ -75,7 +82,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn(inter.variable, tiro.variable, brahmi.variable)}
+      className={cn(anek.variable, anekDeva.variable, tiro.variable, brahmi.variable)}
       {...appearanceAttributes(appearance)}
     >
       {/* A column as tall as the screen: short pages (a 404) keep the footer at the bottom. */}
@@ -86,26 +93,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main id="main" className="flex-1">
             {children}
           </main>
-          <Frame as="footer" className="mt-10 pb-8 sm:mt-12">
-            <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-rule pt-5 font-sans text-sm text-ink-3">
-              <span>
-                {stats.claims} claims from {stats.sources} sources
-              </span>
-              <Link href="/review" className="transition-colors hover:text-ink">
-                Proposed changes
-              </Link>
-              <Link href="/audit" className="transition-colors hover:text-ink">
-                History of changes
-              </Link>
-              <Link href="/insights" className="transition-colors hover:text-ink">
-                Insights
-              </Link>
-              <Link href="/connect" className="transition-colors hover:text-ink">
-                Connect your AI
-              </Link>
-              <span>Code AGPL-3.0, content CC BY-SA 4.0</span>
-            </div>
-          </Frame>
+          <SiteFooter claims={stats.claims} sources={stats.sources} pending={stats.pendingChangesets} />
           <BottomNav connected={presence.connected} />
         </Providers>
       </body>

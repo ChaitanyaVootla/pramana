@@ -138,7 +138,7 @@ export function ConnectSetup({
 
   return (
     <section className={cn("font-sans", className)} aria-labelledby="setup-heading">
-      <h2 id="setup-heading" className="font-serif text-xl text-ink">
+      <h2 id="setup-heading" className="font-heading text-xl text-ink">
         Set up your AI
       </h2>
       <p className="mt-1.5 text-note text-ink-2">
@@ -298,7 +298,7 @@ export function YourKey({ token, className }: { token: string; className?: strin
 
   return (
     <section className={cn("font-sans", className)} aria-labelledby="token-heading">
-      <h2 id="token-heading" className="font-serif text-xl text-ink">
+      <h2 id="token-heading" className="font-heading text-xl text-ink">
         Your key
       </h2>
       <p className="mt-1.5 text-note text-ink-2">

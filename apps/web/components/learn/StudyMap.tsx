@@ -41,7 +41,7 @@ export function StudyMap({ pages, known = {} }: { pages: PageProgress[]; known?:
           <details key={p.slug} className="group py-3">
             <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-4 gap-y-1.5 font-sans [&::-webkit-details-marker]:hidden">
               <span className="min-w-[12rem] flex-1">
-                <span className="font-serif text-lg text-ink">{p.title}</span>
+                <span className="font-heading text-lg text-ink">{p.title}</span>
                 {p.whenLabel && <span className="ml-2 text-sm text-ink-3 tnum">{p.whenLabel}</span>}
                 <span className="block text-sm text-ink-3">
                   {summary}

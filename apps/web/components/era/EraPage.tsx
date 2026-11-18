@@ -1124,7 +1124,7 @@ function EraReader({
 
           <div className="mt-5 flex flex-wrap items-baseline gap-x-4 gap-y-1">
             {entity?.whenLabel && (
-              <span className="font-serif text-xl text-ink tnum sm:text-2xl">
+              <span className="font-heading text-xl text-ink tnum sm:text-2xl">
                 {entity.whenLabel}
               </span>
             )}
@@ -1900,7 +1900,7 @@ function AlreadyKnowItem({
   return (
     <li className="border-t border-rule-soft py-3" {...point}>
       <p className="flex flex-wrap items-baseline gap-x-2">
-        <span className="font-serif text-lg leading-tight text-ink">
+        <span className="font-heading text-lg leading-tight text-ink">
           {entity?.label ?? item.entity}
         </span>
         {entity?.whenLabel && (

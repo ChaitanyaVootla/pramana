@@ -386,7 +386,7 @@ export default async function ClaimPage({ params }: Params) {
           </Breadcrumb>
 
           <header id="claim" className="mt-5 scroll-mt-24">
-            <h1 className="text-3xl leading-[1.08] tracking-[-0.02em] text-ink sm:text-4xl">
+            <h1 className="font-serif text-3xl leading-[1.12] tracking-[-0.015em] text-ink sm:text-4xl">
               {claim.text}
             </h1>
             <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 font-sans text-ui text-ink-2">

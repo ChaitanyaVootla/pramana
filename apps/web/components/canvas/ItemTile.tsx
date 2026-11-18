@@ -252,7 +252,7 @@ export function ItemTile({
         {editing ? (
           <Editor item={item} onDone={() => setEditing(false)} />
         ) : (
-          <h2 className="tile-handle min-w-0 flex-1 truncate font-serif text-2xl leading-tight tracking-[-0.01em] text-ink">{heading}</h2>
+          <h2 className="tile-handle min-w-0 flex-1 truncate font-heading text-2xl leading-tight tracking-[-0.01em] text-ink">{heading}</h2>
         )}
         {pending && <PendingControls item={item} />}
         {menu}

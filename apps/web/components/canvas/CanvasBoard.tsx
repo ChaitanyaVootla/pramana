@@ -485,7 +485,7 @@ function EmptyBoard({
   const body = (
     <div className="w-full max-w-[30rem] font-sans">
       <div role="status" className="field flex flex-col items-center px-6 py-9 text-center sm:px-10">
-        <p className="font-serif text-2xl tracking-[-0.01em] text-ink">A blank canvas</p>
+        <p className="font-heading text-2xl tracking-[-0.01em] text-ink">A blank canvas</p>
         <p className="mt-2 max-w-[42ch] text-note text-ink-2">
           Put anything from the site side by side: claims with their evidence, people and places, a part of a page, a
           quotation, a picture, a map of a year, a timeline, and your own words.
@@ -754,7 +754,7 @@ function Toolbar({
           maxLength={120}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={commitTitle}
-          className="h-8 w-[min(18rem,42vw)] rounded-md border border-transparent bg-transparent px-2 font-serif text-xl text-ink outline-none transition-colors hover:border-rule focus:border-indigo"
+          className="h-8 w-[min(18rem,42vw)] rounded-md border border-transparent bg-transparent px-2 font-heading text-xl text-ink outline-none transition-colors hover:border-rule focus:border-indigo"
         />
       </form>
       <Divider />

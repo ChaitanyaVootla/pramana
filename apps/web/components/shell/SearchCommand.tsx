@@ -92,7 +92,7 @@ export function SearchCommand() {
         onTouchStart={preloadDialog}
         {...preload}
         aria-label="Search"
-        className="inline-flex size-9 items-center justify-center rounded-md text-ink-2 transition-colors hover:bg-rule-soft hover:text-ink sm:hidden"
+        className="inline-flex size-9 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-rule-soft hover:text-ink sm:hidden"
       >
         <Search className="size-[18px]" aria-hidden />
       </button>
@@ -100,10 +100,10 @@ export function SearchCommand() {
         type="button"
         onClick={() => show(true)}
         {...preload}
-        className="hidden h-8 items-center gap-2 rounded-md border border-rule bg-paper px-2.5 font-sans text-ui text-ink-3 transition-colors hover:border-ink-3/60 hover:text-ink-2 sm:flex sm:w-56 lg:w-72"
+        className="hidden h-9 items-center gap-2 rounded-full border border-rule bg-paper pr-2 pl-3.5 font-sans text-ui text-ink-2 transition-colors hover:border-ink-3 hover:text-ink sm:flex sm:w-44 xl:w-64"
       >
         <Search className="size-4 shrink-0" aria-hidden />
-        <span className="truncate">Search</span>
+        <span className="truncate">Search the history</span>
         <Kbd className="ml-auto hidden md:inline-flex">⌘K</Kbd>
       </button>
       {wanted && Dialog && <Dialog open={open} onOpenChange={setOpen} typed={typed.current} />}

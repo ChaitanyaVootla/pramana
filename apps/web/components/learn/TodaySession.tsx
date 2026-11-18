@@ -93,7 +93,7 @@ export function TodaySession(props: {
               <p className="text-sm text-ink-3 tnum">
                 {part.pageTitle}, part {part.number} of {part.parts}
               </p>
-              <h2 id="today-part" className="mt-1 font-serif text-2xl text-ink">
+              <h2 id="today-part" className="mt-1 font-heading text-2xl text-ink">
                 {chapter.title}
               </h2>
               {part.reason && <p className="mt-1 text-sm text-ink-3">{part.reason}</p>}
@@ -168,7 +168,7 @@ function TodayEnd({ part }: { part: NextPart | null }) {
   return (
     <section aria-labelledby="today-end" className="space-y-6 font-sans">
       <div>
-        <h2 id="today-end" className="font-serif text-2xl text-ink">
+        <h2 id="today-end" className="font-heading text-2xl text-ink">
           {part ? `Part ${part.number} done.` : "That's today."}
         </h2>
         <p className="mt-1 text-note text-ink-2">

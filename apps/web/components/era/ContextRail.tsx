@@ -118,7 +118,7 @@ function Person({ person, within }: { person: EntityCard; within: [number, numbe
         <EntityThumb image={person.image} size={40} decorative />
       ) : (
         <span
-          className="flex size-10 shrink-0 items-center justify-center rounded-md bg-indigo-wash font-serif text-lg text-indigo"
+          className="flex size-10 shrink-0 items-center justify-center rounded-md bg-indigo-wash font-heading text-lg text-indigo"
           lang={initial.lang}
           aria-hidden
         >
@@ -320,7 +320,7 @@ export function PlaceCard({
           <MapPin className="mt-1.5 size-4 shrink-0 text-sandstone" aria-hidden />
         )}
         <div className="min-w-0 flex-1">
-          <h2 className="font-serif text-xl leading-tight text-ink">{entity.label}</h2>
+          <h2 className="font-heading text-xl leading-tight text-ink">{entity.label}</h2>
           <p className="mt-0.5 text-sm text-ink-3 tnum">
             {KIND_WORDS[entity.kind] ?? "Place"}
             {datedLabel(entity) ? `, ${datedLabel(entity)}` : ""}

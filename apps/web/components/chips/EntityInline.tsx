@@ -69,7 +69,7 @@ export function EntityInline({
         <div className="flex items-start gap-3">
           {entity.image && <EntityThumb image={entity.image} size={40} decorative />}
           <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-1.5 font-serif text-lg leading-tight text-ink">
+            <p className="flex items-center gap-1.5 font-heading text-lg leading-tight text-ink">
               {isPlace && <MapPin className="size-4 text-sandstone" aria-hidden />}
               {entity.label}
             </p>

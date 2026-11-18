@@ -327,7 +327,7 @@ function BestMatch({ entity: e }: { entity: EntityCard }) {
         <EntityThumb image={e.image} size={64} decorative />
       ) : (
         <span
-          className="flex size-16 shrink-0 items-center justify-center rounded-md bg-indigo-wash font-serif text-2xl text-indigo"
+          className="flex size-16 shrink-0 items-center justify-center rounded-md bg-indigo-wash font-heading text-2xl text-indigo"
           lang={e.kind === "person" ? initial.lang : undefined}
           aria-hidden
         >
@@ -378,7 +378,7 @@ function EntityResult({ entity: e }: { entity: EntityCard }) {
           <EntityThumb image={e.image} size={40} decorative />
         ) : e.kind === "person" ? (
           <span
-            className="flex size-10 shrink-0 items-center justify-center rounded-md bg-indigo-wash font-serif text-lg text-indigo"
+            className="flex size-10 shrink-0 items-center justify-center rounded-md bg-indigo-wash font-heading text-lg text-indigo"
             lang={initial.lang}
             aria-hidden
           >

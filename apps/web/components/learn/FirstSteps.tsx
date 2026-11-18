@@ -88,7 +88,7 @@ export function FirstSteps({
               {step > 0 && step < 3 && <span className="font-normal text-ink-3 tnum">, {step} of {data.place ? 2 : 1}</span>}
             </span>
           </p>
-          <h2 id={titleId} className="mt-1 font-serif text-xl text-ink">
+          <h2 id={titleId} className="mt-1 font-heading text-xl text-ink">
             {step === 0 ? "New to Indian history? Start with two guesses." : step === 3 ? (asResult ? "Where you started" : "Here is where your guesses stand") : step === 1 ? "Put these ages in order, earliest first." : `Where was ${data.place!.entity.label}?`}
           </h2>
         </div>

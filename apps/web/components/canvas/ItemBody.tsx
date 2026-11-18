@@ -59,7 +59,7 @@ export function ItemBody({
         <div className="flex gap-3">
           {e.image && <EntityThumb image={e.image} size={72} />}
           <div className="min-w-0">
-            <Link href={href} className="font-serif text-xl leading-tight text-ink no-underline hover:text-indigo">
+            <Link href={href} className="font-heading text-xl leading-tight text-ink no-underline hover:text-indigo">
               {e.label}
             </Link>
             <p className="mt-1 font-sans text-sm text-ink-3 tnum">
@@ -84,7 +84,7 @@ export function ItemBody({
           </p>
           <Link
             href={`/p/${data.page.slug}#${c.id}`}
-            className="mt-1 block font-serif text-xl leading-tight text-ink no-underline hover:text-indigo"
+            className="mt-1 block font-heading text-xl leading-tight text-ink no-underline hover:text-indigo"
           >
             {c.title}
           </Link>

@@ -5,56 +5,67 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Pramāṇa design tokens (see docs/visual.md).
+ * Pramāṇa design tokens (see docs/visual.md): "dyed in indigo".
  *
- * Six colours carry every meaning; nothing decorative gets one:
- *   indigo     evidence and time (links, dates, the seal, the band)
+ * The palette is the natural-dye set of Indian cloth. Indigo is the brand and
+ * the ink; the other dyes each carry one meaning and are never decoration:
+ *   indigo     evidence and time (links, dates, the seal, the age line), and the chrome
  *   sandstone  places (Chunar sandstone, the stone of the Aśokan pillars)
  *   turmeric   contested, or a belief under examination
  *   madder     refuted
  *   sage       confirmed by a person (green is reserved for people)
- * Surfaces: chuna (ground) -> paper (surface) -> floating (paper + shadow).
- * The field sits *below* the surface: evidence is cut into the page.
+ * Surfaces: chuna (ground: cotton rinsed in blue) -> paper (surface) -> floating
+ * (paper + shadow). The field sits *below* the surface: evidence is cut into the page.
+ * The slab is cloth dyed the other way round: deep indigo with white type (the top
+ * bar, the opening of the home page, the footer). Inside `.on-slab` the same token
+ * names resolve to their on-indigo values, so any component can sit on it unchanged.
  * Token names are stable; only values change between themes.
  */
 :root {
-  --chuna: #f3f2ee;
-  --paper: #fdfdfb;
-  --field: #ecebe5;
-  --ink: #17181d;
-  --ink-2: #4d4f58;
-  --ink-3: #63656f;
-  --rule: #dddcd4;
-  --rule-soft: #e9e8e2;
+  --chuna: #f2f4fa;
+  --paper: #ffffff;
+  --field: #e7eaf5;
+  --ink: #14163a;
+  --ink-2: #434869;
+  --ink-3: #5a5f84;
+  --rule: #d3d8ea;
+  --rule-soft: #e6e9f4;
 
-  --indigo: #2e3eb8;
-  --indigo-deep: #1a2270;
-  --indigo-wash: #e9ebf9;
-  --indigo-tint: #b4bcef;
-  --sandstone: #a65f27;
-  --sandstone-ink: #84481a;
-  --sandstone-wash: #f7ebe0;
-  --turmeric: #c08a00;
-  --turmeric-wash: #f8efd3;
+  --indigo: #2733c4;
+  --indigo-deep: #151b66;
+  --indigo-wash: #e5e8fc;
+  --indigo-tint: #adb5f3;
+  --sandstone: #a85a22;
+  --sandstone-ink: #85461a;
+  --sandstone-wash: #f8ebdd;
+  --turmeric: #c48a00;
+  --turmeric-wash: #faf0ce;
   /* Turmeric for text on paper and washes (4.5:1 and up); --turmeric stays for marks and fills. */
-  --turmeric-ink: #7f5a00;
-  --madder: #b8362b;
-  --madder-wash: #f9e5e2;
-  --sage: #257346;
-  --sage-wash: #dff1e5;
+  --turmeric-ink: #7a5600;
+  --madder: #b93127;
+  --madder-wash: #fbe4e0;
+  --sage: #1f7446;
+  --sage-wash: #dcf2e4;
+
+  /* The slab: indigo cloth with white type. */
+  --slab: #151b66;
+  --slab-ink: #ffffff;
+  --slab-ink-2: #d2d6f8;
+  --slab-ink-3: #aab0e8;
+  --slab-rule: rgb(255 255 255 / 0.18);
 
   /* On the time-rule band (deep indigo in both themes) */
-  --band-tick: #3b4a9e;
-  --band-era: #4e5db8;
-  --band-person: #bcc6f3;
-  --band-event: #dce1f7;
-  --band-lane: #8893cf;
-  --band-label: #bbc3ec;
+  --band-tick: #3944a3;
+  --band-era: #4d59c4;
+  --band-person: #bcc4f5;
+  --band-event: #dde1f9;
+  --band-lane: #8a94d6;
+  --band-label: #bcc3ef;
   --band-on: #ffffff;
 
-  /* The only two shadows: a floating layer, and the inner edge of a field. */
-  --shadow-pop: 0 12px 32px -14px rgb(23 24 29 / 0.28), 0 2px 6px -2px rgb(23 24 29 / 0.1), 0 0 0 1px rgb(23 24 29 / 0.06);
-  --shadow-field: inset 0 1px 0 rgb(23 24 29 / 0.05);
+  /* The only two shadows: a floating layer, and the inner edge of a field. Both are tinted with the ink. */
+  --shadow-pop: 0 18px 40px -18px rgb(20 22 58 / 0.32), 0 3px 8px -3px rgb(20 22 58 / 0.12), 0 0 0 1px rgb(20 22 58 / 0.07);
+  --shadow-field: inset 0 1px 0 rgb(20 22 58 / 0.06);
   /* Kept for callers; a surface has an edge, not a shadow. */
   --shadow-card: 0 0 0 0 transparent;
 
@@ -63,12 +74,12 @@
   --gutter: clamp(1rem, 2.5vw, 3rem);
   --toc-w: 13rem;
   --rail-w: 20rem;
-  --topbar-h: 3rem;
+  --topbar-h: 3.5rem;
   --bottomnav-h: 3.5rem;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* shadcn/ui theme, mapped to the tokens */
-  --radius: 6px;
+  --radius: 8px;
   --background: var(--chuna);
   --foreground: var(--ink);
   --card: var(--paper);
@@ -101,11 +112,17 @@
   --sidebar-border: var(--rule);
   --sidebar-ring: var(--indigo);
 
-  /* Fonts: Tiro Devanagari Sanskrit for display, reading and Devanagari (one voice for both scripts); Inter for the interface. */
-  --font-ui: var(--font-inter), "Inter", system-ui, sans-serif;
+  /*
+   * Fonts: two voices. Anek (Latin and Devanagari, one design by Ek Type) is the platform speaking:
+   * titles, navigation, labels, numbers. Tiro Devanagari Sanskrit is history speaking: prose, claims,
+   * quotations. Both carry every IAST mark as a drawn glyph.
+   */
+  --font-ui: var(--font-anek), "Anek Latin", system-ui, sans-serif;
   --font-serif: var(--font-tiro), "Tiro Devanagari Sanskrit", "Gentium Book Plus", Georgia, serif;
-  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-sans: var(--font-anek), "Anek Latin", system-ui, sans-serif;
+  --font-heading: var(--font-anek), "Anek Latin", system-ui, sans-serif;
   --font-deva: var(--font-tiro), "Noto Serif Devanagari", serif;
+  --font-deva-display: var(--font-anek-deva), "Anek Devanagari", var(--font-tiro), sans-serif;
   /* Legacy aliases for CSS-module components not yet migrated (remove when unused). */
   --font-literata: var(--font-tiro);
   --paper-raised: var(--paper);
@@ -118,6 +135,7 @@
   --step-3: 2rem;
   --step-4: 2.75rem;
   --step-5: 3.5rem;
+
   /* The reading column: a measure for prose and a width for the column that holds it. */
   --measure: 64ch;
   --reading-w: 44rem;
@@ -167,84 +185,146 @@ html:not([data-density="full"]) .evidence-full {
 }
 
 /*
- * Dark theme: same meanings on an ink-blue ground (not black). Indigo and the
- * semantic colours get lighter; the band stays deep indigo.
+ * Dark theme: the vat. The ground is indigo so deep it is nearly night, never
+ * neutral black; paper and fields are steps of the same dye. Indigo and the
+ * meaning colours get lighter.
  */
 .dark {
-  --chuna: #0f1015;
-  --paper: #171821;
-  --field: #1d1e29;
-  --ink: #edece6;
-  --ink-2: #b3b4bf;
-  --ink-3: #8f919d;
-  --rule: #2a2b37;
-  --rule-soft: #1f2029;
+  --chuna: #0b0d24;
+  --paper: #131638;
+  --field: #191d47;
+  --ink: #eceefb;
+  --ink-2: #b7bbdc;
+  --ink-3: #9297c2;
+  --rule: #2a2f63;
+  --rule-soft: #1c2050;
 
-  --indigo: #9ba7ff;
-  --indigo-deep: #171e5e;
-  --indigo-wash: #1e2347;
-  --indigo-tint: #3d4a95;
-  --sandstone: #e0a470;
-  --sandstone-ink: #eac39a;
-  --sandstone-wash: #2b2018;
-  --turmeric: #e7b847;
-  --turmeric-wash: #2d2410;
-  --turmeric-ink: #e7b847;
-  --madder: #f28c82;
-  --madder-wash: #381b19;
-  --sage: #7ecf9b;
-  --sage-wash: #15301f;
+  --indigo: #a5aeff;
+  --indigo-deep: #1a2075;
+  --indigo-wash: #222967;
+  --indigo-tint: #4651b3;
+  --sandstone: #e3a672;
+  --sandstone-ink: #ecc59d;
+  --sandstone-wash: #2e2219;
+  --turmeric: #e9ba48;
+  --turmeric-wash: #2f2611;
+  --turmeric-ink: #e9ba48;
+  --madder: #f59086;
+  --madder-wash: #3a1c1f;
+  --sage: #80d19d;
+  --sage-wash: #14321f;
 
-  --band-tick: #3b4a9e;
-  --band-era: #4e5db8;
-  --band-person: #bcc6f3;
-  --band-event: #dce1f7;
-  --band-lane: #8893cf;
-  --band-label: #bbc3ec;
+  --slab: #191f70;
+  --slab-ink: #ffffff;
+  --slab-ink-2: #d2d6f8;
+  --slab-ink-3: #aab0e8;
+  --slab-rule: rgb(255 255 255 / 0.16);
+
+  --band-tick: #3944a3;
+  --band-era: #4d59c4;
+  --band-person: #bcc4f5;
+  --band-event: #dde1f9;
+  --band-lane: #8a94d6;
+  --band-label: #bcc3ef;
   --band-on: #ffffff;
 
-  --shadow-pop: 0 16px 40px -16px rgb(0 0 0 / 0.7), 0 2px 8px -2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.06);
-  --shadow-field: inset 0 1px 0 rgb(0 0 0 / 0.35);
+  --shadow-pop: 0 18px 44px -16px rgb(0 0 12 / 0.75), 0 2px 8px -2px rgb(0 0 12 / 0.5), 0 0 0 1px rgb(165 174 255 / 0.12);
+  --shadow-field: inset 0 1px 0 rgb(0 0 12 / 0.4);
   --shadow-card: 0 0 0 0 transparent;
 
   /* Filled primary controls: a mid indigo with white text (5:1), not the light link indigo. */
-  --primary: #5262e3;
+  --primary: #4f5ce6;
   --primary-foreground: #ffffff;
-  --sidebar-primary: #5262e3;
+  --sidebar-primary: #4f5ce6;
   --sidebar-primary-foreground: #ffffff;
+
   color-scheme: dark;
+}
+
+/*
+ * On the slab the same names mean their on-indigo values, in both themes. The
+ * shadcn names are declared again because they were resolved at the root.
+ */
+.on-slab {
+  --chuna: var(--slab);
+  --paper: rgb(255 255 255 / 0.09);
+  --field: rgb(4 6 40 / 0.28);
+  --ink: var(--slab-ink);
+  --ink-2: var(--slab-ink-2);
+  --ink-3: var(--slab-ink-3);
+  --rule: var(--slab-rule);
+  --rule-soft: rgb(255 255 255 / 0.1);
+  --indigo: #cdd2ff;
+  --indigo-wash: rgb(255 255 255 / 0.13);
+  --indigo-tint: #7d88e8;
+  --turmeric: #f1c453;
+  --turmeric-ink: #f1c453;
+  --sage: #8fdcab;
+  --background: var(--slab);
+  --foreground: var(--slab-ink);
+  --card: var(--paper);
+  --card-foreground: var(--slab-ink);
+  --primary: #ffffff;
+  --primary-foreground: var(--slab);
+  --secondary: var(--indigo-wash);
+  --secondary-foreground: var(--slab-ink);
+  --muted: var(--rule-soft);
+  --muted-foreground: var(--slab-ink-2);
+  --accent: var(--indigo-wash);
+  --accent-foreground: var(--slab-ink);
+  --border: var(--slab-rule);
+  --input: var(--slab-rule);
+  --ring: #cdd2ff;
+  background-color: var(--slab);
+  color: var(--slab-ink);
+}
+
+/* Titles: Anek, drawn a little narrow and firm. */
+@utility font-heading {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-stretch: 92%;
+  letter-spacing: -0.012em;
+}
+/* The largest titles: narrower and heavier still, set tight. */
+@utility font-display {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-stretch: 80%;
+  letter-spacing: -0.022em;
 }
 
 @theme inline {
   --font-serif: var(--font-tiro), "Tiro Devanagari Sanskrit", Georgia, serif;
-  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
-  --font-heading: var(--font-tiro), "Tiro Devanagari Sanskrit", Georgia, serif;
+  --font-sans: var(--font-anek), "Anek Latin", system-ui, sans-serif;
   --font-deva: var(--font-tiro), "Noto Serif Devanagari", serif;
   --font-brahmi: var(--font-noto-brahmi), sans-serif;
 
-  /* Type scale (px): 12 13 14 15 17 19 20 24 32 44 56. Roles in docs/visual.md. */
-  --text-xs: 0.75rem;
+  /* Type scale (px): 12.5 13.5 14.5 16 17 19 21 26 34 46 60 76. Roles in docs/visual.md. */
+  --text-xs: 0.78125rem;
   --text-xs--line-height: 1.4;
-  --text-sm: 0.8125rem;
+  --text-sm: 0.84375rem;
   --text-sm--line-height: 1.45;
-  --text-ui: 0.875rem;
+  --text-ui: 0.90625rem;
   --text-ui--line-height: 1.45;
-  --text-note: 0.9375rem;
+  --text-note: 1rem;
   --text-note--line-height: 1.5;
   --text-base: 1.0625rem;
-  --text-base--line-height: 1.6;
+  --text-base--line-height: 1.62;
   --text-lg: 1.1875rem;
   --text-lg--line-height: 1.5;
-  --text-xl: 1.25rem;
-  --text-xl--line-height: 1.3;
-  --text-2xl: 1.5rem;
+  --text-xl: 1.3125rem;
+  --text-xl--line-height: 1.25;
+  --text-2xl: 1.625rem;
   --text-2xl--line-height: 1.15;
-  --text-3xl: 2rem;
+  --text-3xl: 2.125rem;
   --text-3xl--line-height: 1.08;
-  --text-4xl: 2.75rem;
+  --text-4xl: 2.875rem;
   --text-4xl--line-height: 1.02;
-  --text-5xl: 3.5rem;
-  --text-5xl--line-height: 1;
+  --text-5xl: 3.75rem;
+  --text-5xl--line-height: 0.98;
+  --text-6xl: 4.75rem;
+  --text-6xl--line-height: 0.95;
 
   --color-chuna: var(--chuna);
   --color-paper: var(--paper);
@@ -275,6 +355,11 @@ html:not([data-density="full"]) .evidence-full {
   --color-band-lane: var(--band-lane);
   --color-band-label: var(--band-label);
   --color-band-on: var(--band-on);
+  --color-slab: var(--slab);
+  --color-slab-ink: var(--slab-ink);
+  --color-slab-ink-2: var(--slab-ink-2);
+  --color-slab-ink-3: var(--slab-ink-3);
+  --color-slab-rule: var(--slab-rule);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -309,11 +394,11 @@ html:not([data-density="full"]) .evidence-full {
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Radii encode hierarchy: tags and fields (sm), controls, rows and tiles (md), floating layers (lg). */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
-  --radius-2xl: 14px;
+  --radius-sm: 3px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
   --shadow-pop: var(--shadow-pop);
   --shadow-card: var(--shadow-card);
   --shadow-field: var(--shadow-field);
@@ -365,19 +450,35 @@ html:not([data-density="full"]) .evidence-full {
   h4 {
     font-family: var(--font-heading);
     font-weight: 400;
-    letter-spacing: -0.01em;
     text-wrap: balance;
   }
-  h1 {
+  /*
+   * A title is the platform speaking: Anek, a little narrow and firm. A heading
+   * that asks for the serif (a claim is history speaking) or for interface text
+   * keeps that voice instead.
+   */
+  :where(h1, h2, h3, h4):not(.font-sans, .font-serif) {
+    font-weight: 600;
+    font-stretch: 92%;
+    letter-spacing: -0.012em;
+  }
+  :where(h1):not(.font-sans, .font-serif) {
+    font-weight: 700;
+    font-stretch: 84%;
     letter-spacing: -0.02em;
+  }
+  /* Interface text inside a title (a date, a count) is not part of the title. */
+  :where(h1, h2, h3, h4, .font-heading, .font-display) :where(.font-sans, .font-serif) {
+    font-weight: 400;
+    font-stretch: 100%;
+    letter-spacing: 0;
   }
   /* Emphasis in serif prose is italic; a strong word is set in the sans, so no weight is synthesised. */
   strong,
   b {
     font-family: var(--font-sans);
     font-weight: 600;
-    font-size: 0.94em;
-    letter-spacing: -0.006em;
+    font-size: 0.98em;
   }
   .font-sans strong,
   .font-sans b {
@@ -398,9 +499,14 @@ html:not([data-density="full"]) .evidence-full {
   :lang(mr) {
     font-family: var(--font-deva);
   }
-  /* Interface text: slightly tighter, like a native UI. */
-  .font-sans {
-    letter-spacing: -0.006em;
+  /* Devanagari beside a title is drawn in the title's own family (Anek Devanagari), a step lighter. */
+  :where(h1, h2, h3, h4):not(.font-sans, .font-serif) :is(:lang(hi), :lang(sa), :lang(mr)),
+  :where(.font-heading, .font-display) :is(:lang(hi), :lang(sa), :lang(mr)) {
+    font-family: var(--font-deva-display) !important;
+    font-weight: 500;
+    font-stretch: 90%;
+    letter-spacing: 0;
+    font-size: 0.86em;
   }
 }
 
@@ -433,18 +539,18 @@ html:not([data-density="full"]) .evidence-full {
  * the panel never covers what it changes. The top bar keeps its width.
  */
 html[data-dock="right"] main .frame,
-html[data-dock="right"] footer.frame {
+html[data-dock="right"] footer .frame {
   padding-right: calc(var(--dock-w, 22rem) + var(--gutter));
 }
 main .frame,
-footer.frame {
+footer .frame {
   transition: padding-right 200ms var(--ease-out-quart);
 }
 /*
  * The canvas board is an app surface under the top bar: the site footer is not shown there. Decided by the
  * server-rendered marker, so the footer never appears and then goes (a 0.15 layout shift on phones).
  */
-body:has([data-canvas-board]) footer.frame {
+body:has([data-canvas-board]) footer.site-footer {
   display: none;
 }
 /* A surface: paper with an edge, no shadow. (Prefer .tile, .field or plain layout; see docs/visual.md §5.) */
@@ -463,7 +569,7 @@ body:has([data-canvas-board]) footer.frame {
   transition: border-color 150ms var(--ease-out-quart);
 }
 .tile:hover {
-  border-color: color-mix(in oklab, var(--ink) 28%, var(--rule));
+  border-color: var(--indigo);
 }
 /* Evidence is cut into the page: a recessed field with a fine inner edge. */
 .field {

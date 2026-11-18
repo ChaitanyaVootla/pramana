@@ -537,7 +537,7 @@ function EntityReader({ data, history, ageLine }: { data: EntityPageData; histor
                       "text-ink tnum",
                       isLocated(entity) && entity.kind !== "event"
                         ? "font-sans text-ui text-ink-2 first-letter:uppercase"
-                        : "font-serif text-xl sm:text-2xl",
+                        : "font-heading text-xl sm:text-2xl",
                     )}
                   >
                     {datedLabel(entity)}

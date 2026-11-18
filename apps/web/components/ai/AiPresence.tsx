@@ -39,7 +39,7 @@ export function AiPresence({
       <PopoverTrigger
         aria-label={connected ? "Your AI: connected" : "Your AI: not connected"}
         className={cn(
-          "relative inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md px-2 font-sans text-ui text-ink-2 transition-colors hover:bg-rule-soft hover:text-ink data-[popup-open]:bg-rule-soft data-[popup-open]:text-ink",
+          "relative inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-2.5 font-sans text-ui text-ink-2 transition-colors hover:bg-rule-soft hover:text-ink data-[popup-open]:bg-rule-soft data-[popup-open]:text-ink",
           className,
         )}
       >

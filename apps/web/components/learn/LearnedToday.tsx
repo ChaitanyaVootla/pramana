@@ -36,7 +36,7 @@ export function LearnedToday({ data, title = "What you learned today", limit = 4
   const hidden = data.claims.length - facts.length + beliefsMet.length - shownBeliefs.length;
   return (
     <section aria-labelledby="learned-today" className="font-sans">
-      <h2 id="learned-today" className="scroll-mt-28 font-serif text-xl text-ink">
+      <h2 id="learned-today" className="scroll-mt-28 font-heading text-xl text-ink">
         {title}
       </h2>
       <p className="mt-1 text-sm text-ink-2 tnum">

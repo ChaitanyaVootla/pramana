@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export function WhatYourAiCanDo({ className }: { className?: string }) {
   return (
     <section className={cn("font-sans", className)} aria-labelledby="can-do-heading">
-      <h2 id="can-do-heading" className="font-serif text-xl text-ink">
+      <h2 id="can-do-heading" className="font-heading text-xl text-ink">
         What your AI can do here
       </h2>
       <p className="mt-1.5 text-note text-ink-2">

@@ -52,7 +52,7 @@ export default async function CanvasesPage() {
           {canvases.map((c) => (
             <li key={c.id}>
               <Link href={`/canvas/${c.id}`} className="tile block h-full p-4 no-underline">
-                <span className="block font-serif text-xl leading-tight text-ink">{c.title}</span>
+                <span className="block font-heading text-xl leading-tight text-ink">{c.title}</span>
                 {c.description && <span className="mt-1 line-clamp-2 block font-sans text-note text-ink-2">{c.description}</span>}
                 <span className="mt-3 block font-sans text-sm text-ink-3">{holds(c.kinds)}</span>
                 <span className="mt-0.5 block font-sans text-sm text-ink-3 tnum">

@@ -36,7 +36,7 @@ export function SessionList({
   const quiet = groups.filter((g) => !busy.includes(g));
   return (
     <section className={cn("font-sans", className)} aria-labelledby="sessions-heading">
-      <h2 id="sessions-heading" className="font-serif text-xl text-ink">
+      <h2 id="sessions-heading" className="font-heading text-xl text-ink">
         Recent connections
       </h2>
       {sessions.length === 0 ? (

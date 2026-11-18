@@ -76,7 +76,7 @@ export function DateChip({
         <span className="tnum">{label}</span>
       </PopoverTrigger>
       <PopoverContent className="w-72 gap-0 font-sans text-note">
-        <p className="font-serif text-lg text-ink tnum">{label}</p>
+        <p className="font-heading text-lg text-ink tnum">{label}</p>
         {ago && <p className="text-ink-2">{ago}</p>}
         {asStated && (
           <p className="mt-2.5 text-ink-2">
@@ -148,7 +148,7 @@ export function PlaceChip({ entity, label }: { entity: EntityCard; label?: strin
       <PopoverContent className="w-80 gap-0 font-sans text-note">
         <div className="flex items-start gap-3">
           {entity.image && <EntityThumb image={entity.image} size={40} decorative />}
-          <p className="min-w-0 flex-1 font-serif text-lg text-ink">{entity.label}</p>
+          <p className="min-w-0 flex-1 font-heading text-lg text-ink">{entity.label}</p>
         </div>
         {entity.description && <p className="mt-0.5 text-ink-2">{entity.description}</p>}
         {entity.geo ? (
@@ -216,14 +216,14 @@ export function PersonChip({
             <EntityThumb image={entity.image} size={40} decorative />
           ) : (
             <span
-              className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-indigo-wash font-serif text-xl text-indigo"
+              className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-indigo-wash font-heading text-xl text-indigo"
               lang={initial.lang}
             >
               {initial.char}
             </span>
           )}
           <div className="min-w-0">
-            <p className="font-serif text-lg leading-tight text-ink">{entity.label}</p>
+            <p className="font-heading text-lg leading-tight text-ink">{entity.label}</p>
             {entity.whenLabel && (
               <p className="mt-0.5 text-sm text-ink-2 tnum">{datedLabel(entity)}</p>
             )}

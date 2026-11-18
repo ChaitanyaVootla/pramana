@@ -3,11 +3,11 @@
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 
-const COLORS = { light: "#f3f2ee", dark: "#0f1015" };
+const COLORS = { light: "#151b66", dark: "#191f70" };
 
 /**
- * Keeps the browser chrome (address bar, PWA title bar) the colour of the page
- * ground when the person picks a theme that differs from the device's.
+ * Keeps the browser chrome (address bar, PWA title bar) the colour of the top bar
+ * (the slab) when the person picks a theme that differs from the device's.
  */
 export function ThemeColor() {
   const { resolvedTheme } = useTheme();

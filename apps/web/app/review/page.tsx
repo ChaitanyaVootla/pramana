@@ -265,7 +265,7 @@ function ChangesetRows({
               )}
               <Link
                 href={`/review/${c.id}`}
-                className="font-serif text-lg leading-snug text-ink no-underline hover:text-indigo"
+                className="font-heading text-lg leading-snug text-ink no-underline hover:text-indigo"
               >
                 {c.title}
               </Link>

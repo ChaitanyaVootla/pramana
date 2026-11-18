@@ -207,7 +207,7 @@ export function Appearance({
         <TooltipTrigger
           render={
             <PopoverTrigger
-              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md px-2 font-sans text-ui text-ink-2 transition-colors hover:bg-rule-soft hover:text-ink aria-expanded:bg-rule-soft aria-expanded:text-ink"
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-2.5 font-sans text-ui text-ink-2 transition-colors hover:bg-rule-soft hover:text-ink aria-expanded:bg-rule-soft aria-expanded:text-ink"
               aria-label="Appearance: theme, text size and evidence"
             />
           }

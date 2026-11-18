@@ -209,7 +209,7 @@ export function MediaDialog({
           </div>
           <div className="space-y-3 p-5 font-sans text-note text-ink-2">
             <div className="pr-8">
-              <DialogTitle className="font-serif text-xl leading-snug text-ink">{media.title}</DialogTitle>
+              <DialogTitle className="font-heading text-xl leading-snug text-ink">{media.title}</DialogTitle>
               <p className="mt-1 text-sm text-ink-3">
                 {mediaKindLine(media)}
                 {many && (

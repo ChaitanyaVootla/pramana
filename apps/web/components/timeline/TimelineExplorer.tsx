@@ -174,7 +174,7 @@ function YearCard({
       ) : (
         <div key={Math.round(year / 5)} className="animate-in fade-in duration-200">
           <p className="text-sm text-ink-3">The map shows</p>
-          <p className="font-serif text-3xl leading-tight text-ink tnum">
+          <p className="font-heading text-3xl leading-tight text-ink tnum">
             {formatYear(year, { era: "auto" })}
           </p>
 
@@ -187,7 +187,7 @@ function YearCard({
                       href={a.pageSlug ? `/p/${a.pageSlug}` : `/e/${a.slug}`}
                       className="group flex items-baseline justify-between gap-3 no-underline"
                     >
-                      <span className="font-serif text-lg leading-snug text-ink group-hover:underline">
+                      <span className="font-heading text-lg leading-snug text-ink group-hover:underline">
                         {a.label}
                       </span>
                       {a.pageSlug && (
