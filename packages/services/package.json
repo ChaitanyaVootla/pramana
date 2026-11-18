@@ -1,0 +1,22 @@
+{
+  "name": "@pramana/services",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "description": "The one code path for reading and changing data, shared by the web app and the MCP server. Every write is audited.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@pramana/connectors": "workspace:*",
+    "@pramana/core": "workspace:*",
+    "@pramana/db": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "ts-fsrs": "^5.4.2",
+    "zod": "^4.6.7"
+  }
+}

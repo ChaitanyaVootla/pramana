@@ -1,0 +1,592 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Pramāṇa design tokens (see docs/visual.md).
+ *
+ * Six colours carry every meaning; nothing decorative gets one:
+ *   indigo     evidence and time (links, dates, the seal, the band)
+ *   sandstone  places (Chunar sandstone, the stone of the Aśokan pillars)
+ *   turmeric   contested, or a belief under examination
+ *   madder     refuted
+ *   sage       confirmed by a person (green is reserved for people)
+ * Surfaces: chuna (ground) -> paper (surface) -> floating (paper + shadow).
+ * The field sits *below* the surface: evidence is cut into the page.
+ * Token names are stable; only values change between themes.
+ */
+:root {
+  --chuna: #f3f2ee;
+  --paper: #fdfdfb;
+  --field: #ecebe5;
+  --ink: #17181d;
+  --ink-2: #4d4f58;
+  --ink-3: #63656f;
+  --rule: #dddcd4;
+  --rule-soft: #e9e8e2;
+
+  --indigo: #2e3eb8;
+  --indigo-deep: #1a2270;
+  --indigo-wash: #e9ebf9;
+  --indigo-tint: #b4bcef;
+  --sandstone: #a65f27;
+  --sandstone-ink: #84481a;
+  --sandstone-wash: #f7ebe0;
+  --turmeric: #c08a00;
+  --turmeric-wash: #f8efd3;
+  /* Turmeric for text on paper and washes (4.5:1 and up); --turmeric stays for marks and fills. */
+  --turmeric-ink: #7f5a00;
+  --madder: #b8362b;
+  --madder-wash: #f9e5e2;
+  --sage: #257346;
+  --sage-wash: #dff1e5;
+
+  /* On the time-rule band (deep indigo in both themes) */
+  --band-tick: #3b4a9e;
+  --band-era: #4e5db8;
+  --band-person: #bcc6f3;
+  --band-event: #dce1f7;
+  --band-lane: #8893cf;
+  --band-label: #bbc3ec;
+  --band-on: #ffffff;
+
+  /* The only two shadows: a floating layer, and the inner edge of a field. */
+  --shadow-pop: 0 12px 32px -14px rgb(23 24 29 / 0.28), 0 2px 6px -2px rgb(23 24 29 / 0.1), 0 0 0 1px rgb(23 24 29 / 0.06);
+  --shadow-field: inset 0 1px 0 rgb(23 24 29 / 0.05);
+  /* Kept for callers; a surface has an edge, not a shadow. */
+  --shadow-card: 0 0 0 0 transparent;
+
+  /* Layout frame: one width and gutter for every page. */
+  --frame-max: 1760px;
+  --gutter: clamp(1rem, 2.5vw, 3rem);
+  --toc-w: 13rem;
+  --rail-w: 20rem;
+  --topbar-h: 3rem;
+  --bottomnav-h: 3.5rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* shadcn/ui theme, mapped to the tokens */
+  --radius: 6px;
+  --background: var(--chuna);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--indigo);
+  --primary-foreground: #ffffff;
+  --secondary: var(--indigo-wash);
+  --secondary-foreground: var(--indigo);
+  --muted: var(--rule-soft);
+  --muted-foreground: var(--ink-2);
+  --accent: var(--indigo-wash);
+  --accent-foreground: var(--indigo);
+  --destructive: var(--madder);
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--indigo);
+  --chart-1: var(--indigo);
+  --chart-2: var(--turmeric);
+  --chart-3: var(--sage);
+  --chart-4: var(--madder);
+  --chart-5: var(--ink-2);
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--indigo);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--indigo-wash);
+  --sidebar-accent-foreground: var(--indigo);
+  --sidebar-border: var(--rule);
+  --sidebar-ring: var(--indigo);
+
+  /* Fonts: Tiro Devanagari Sanskrit for display, reading and Devanagari (one voice for both scripts); Inter for the interface. */
+  --font-ui: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-serif: var(--font-tiro), "Tiro Devanagari Sanskrit", "Gentium Book Plus", Georgia, serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-deva: var(--font-tiro), "Noto Serif Devanagari", serif;
+  /* Legacy aliases for CSS-module components not yet migrated (remove when unused). */
+  --font-literata: var(--font-tiro);
+  --paper-raised: var(--paper);
+  --ink-soft: var(--ink-2);
+  --ink-faint: var(--ink-3);
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.5rem;
+  --step-3: 2rem;
+  --step-4: 2.75rem;
+  --step-5: 3.5rem;
+  /* The reading column: a measure for prose and a width for the column that holds it. */
+  --measure: 64ch;
+  --reading-w: 44rem;
+
+  color-scheme: light;
+}
+
+/*
+ * The appearance panel (components/shell/Appearance.tsx) sets data-text,
+ * data-width and data-density on <html>. Text size scales the root em, so
+ * every rem-based size and spacing follows; line width widens the reading
+ * column and measure; evidence density shows or hides the citation detail a
+ * page marks with .evidence-standard (hidden at quiet) and .evidence-full
+ * (shown only at full).
+ */
+html[data-text="small"] {
+  font-size: 93.75%;
+}
+html[data-text="large"] {
+  font-size: 112.5%;
+}
+html[data-width="wide"] {
+  --measure: 80ch;
+  --reading-w: 58rem;
+}
+html[data-density="quiet"] .evidence-standard,
+html[data-density="quiet"] .evidence-full,
+html:not([data-density="full"]) .evidence-full {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --rail-w: 23rem;
+  }
+}
+@media (min-width: 1600px) {
+  :root {
+    --toc-w: 15rem;
+    --rail-w: 27rem;
+  }
+}
+@media (min-width: 1920px) {
+  :root {
+    --frame-max: 1880px;
+  }
+}
+
+/*
+ * Dark theme: same meanings on an ink-blue ground (not black). Indigo and the
+ * semantic colours get lighter; the band stays deep indigo.
+ */
+.dark {
+  --chuna: #0f1015;
+  --paper: #171821;
+  --field: #1d1e29;
+  --ink: #edece6;
+  --ink-2: #b3b4bf;
+  --ink-3: #8f919d;
+  --rule: #2a2b37;
+  --rule-soft: #1f2029;
+
+  --indigo: #9ba7ff;
+  --indigo-deep: #171e5e;
+  --indigo-wash: #1e2347;
+  --indigo-tint: #3d4a95;
+  --sandstone: #e0a470;
+  --sandstone-ink: #eac39a;
+  --sandstone-wash: #2b2018;
+  --turmeric: #e7b847;
+  --turmeric-wash: #2d2410;
+  --turmeric-ink: #e7b847;
+  --madder: #f28c82;
+  --madder-wash: #381b19;
+  --sage: #7ecf9b;
+  --sage-wash: #15301f;
+
+  --band-tick: #3b4a9e;
+  --band-era: #4e5db8;
+  --band-person: #bcc6f3;
+  --band-event: #dce1f7;
+  --band-lane: #8893cf;
+  --band-label: #bbc3ec;
+  --band-on: #ffffff;
+
+  --shadow-pop: 0 16px 40px -16px rgb(0 0 0 / 0.7), 0 2px 8px -2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.06);
+  --shadow-field: inset 0 1px 0 rgb(0 0 0 / 0.35);
+  --shadow-card: 0 0 0 0 transparent;
+
+  /* Filled primary controls: a mid indigo with white text (5:1), not the light link indigo. */
+  --primary: #5262e3;
+  --primary-foreground: #ffffff;
+  --sidebar-primary: #5262e3;
+  --sidebar-primary-foreground: #ffffff;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-serif: var(--font-tiro), "Tiro Devanagari Sanskrit", Georgia, serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-heading: var(--font-tiro), "Tiro Devanagari Sanskrit", Georgia, serif;
+  --font-deva: var(--font-tiro), "Noto Serif Devanagari", serif;
+  --font-brahmi: var(--font-noto-brahmi), sans-serif;
+
+  /* Type scale (px): 12 13 14 15 17 19 20 24 32 44 56. Roles in docs/visual.md. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.45;
+  --text-ui: 0.875rem;
+  --text-ui--line-height: 1.45;
+  --text-note: 0.9375rem;
+  --text-note--line-height: 1.5;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.5;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.3;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.15;
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 1.08;
+  --text-4xl: 2.75rem;
+  --text-4xl--line-height: 1.02;
+  --text-5xl: 3.5rem;
+  --text-5xl--line-height: 1;
+
+  --color-chuna: var(--chuna);
+  --color-paper: var(--paper);
+  --color-field: var(--field);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-indigo: var(--indigo);
+  --color-indigo-deep: var(--indigo-deep);
+  --color-indigo-wash: var(--indigo-wash);
+  --color-indigo-tint: var(--indigo-tint);
+  --color-sandstone: var(--sandstone);
+  --color-sandstone-ink: var(--sandstone-ink);
+  --color-sandstone-wash: var(--sandstone-wash);
+  --color-turmeric: var(--turmeric);
+  --color-turmeric-ink: var(--turmeric-ink);
+  --color-turmeric-wash: var(--turmeric-wash);
+  --color-madder: var(--madder);
+  --color-madder-wash: var(--madder-wash);
+  --color-sage: var(--sage);
+  --color-sage-wash: var(--sage-wash);
+  --color-band-tick: var(--band-tick);
+  --color-band-era: var(--band-era);
+  --color-band-person: var(--band-person);
+  --color-band-event: var(--band-event);
+  --color-band-lane: var(--band-lane);
+  --color-band-label: var(--band-label);
+  --color-band-on: var(--band-on);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Radii encode hierarchy: tags and fields (sm), controls, rows and tiles (md), floating layers (lg). */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --shadow-pop: var(--shadow-pop);
+  --shadow-card: var(--shadow-card);
+  --shadow-field: var(--shadow-field);
+
+  /* Motion: short and purposeful. */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: calc(var(--topbar-h) + 1rem);
+  }
+  /*
+   * The sticky top bar, and the popovers that open from it, sit inside that padding. Without this,
+   * focusing one of their controls (Tab, a popover moving focus to its first item) counts as "hidden
+   * under the bar" and scrolls the page up to reveal it. Popovers are always placed in view.
+   */
+  [data-chrome],
+  [data-chrome] *,
+  [data-slot="popover-content"],
+  [data-slot="popover-content"] * {
+    scroll-margin-top: calc(-1 * (var(--topbar-h) + 1rem));
+  }
+  body {
+    @apply bg-background text-foreground font-serif text-base;
+    font-kerning: normal;
+    font-variant-numeric: lining-nums proportional-nums;
+    font-optical-sizing: auto;
+    /* Tiro has one weight: never let the browser smear a bold out of it. */
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Room for the bottom navigation on small screens. */
+    padding-bottom: calc(var(--bottomnav-h) + var(--safe-bottom));
+  }
+  @media (min-width: 768px) {
+    body {
+      padding-bottom: 0;
+    }
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  h1 {
+    letter-spacing: -0.02em;
+  }
+  /* Emphasis in serif prose is italic; a strong word is set in the sans, so no weight is synthesised. */
+  strong,
+  b {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.94em;
+    letter-spacing: -0.006em;
+  }
+  .font-sans strong,
+  .font-sans b {
+    font-size: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--indigo);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  ::selection {
+    background: var(--indigo-tint);
+    color: var(--ink);
+  }
+  /* Devanagari always in Tiro, whatever surrounds it. */
+  :lang(hi),
+  :lang(sa),
+  :lang(mr) {
+    font-family: var(--font-deva);
+  }
+  /* Interface text: slightly tighter, like a native UI. */
+  .font-sans {
+    letter-spacing: -0.006em;
+  }
+}
+
+/* Small utilities used across components. */
+.deva {
+  font-family: var(--font-deva);
+}
+.tabular,
+.tnum {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+/* The one page frame: see components/shell/Frame.tsx. */
+.frame {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--frame-max);
+  padding-inline: max(var(--gutter), env(safe-area-inset-left), env(safe-area-inset-right));
+}
+/*
+ * A docked panel ("Customise this page", components/yourview/Customise.tsx) sits beside the content on
+ * wide screens: while it is open, <html data-dock="right"> and the page's frames make room for it, so
+ * the panel never covers what it changes. The top bar keeps its width.
+ */
+html[data-dock="right"] main .frame,
+html[data-dock="right"] footer.frame {
+  padding-right: calc(var(--dock-w, 22rem) + var(--gutter));
+}
+main .frame,
+footer.frame {
+  transition: padding-right 200ms var(--ease-out-quart);
+}
+/*
+ * The canvas board is an app surface under the top bar: the site footer is not shown there. Decided by the
+ * server-rendered marker, so the footer never appears and then goes (a 0.15 layout shift on phones).
+ */
+body:has([data-canvas-board]) footer.frame {
+  display: none;
+}
+/* A surface: paper with an edge, no shadow. (Prefer .tile, .field or plain layout; see docs/visual.md §5.) */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+}
+/* A whole-tile link: paper, edge, picture on top; the title turns indigo on hover. */
+.tile {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  text-decoration: none;
+  transition: border-color 150ms var(--ease-out-quart);
+}
+.tile:hover {
+  border-color: color-mix(in oklab, var(--ink) 28%, var(--rule));
+}
+/* Evidence is cut into the page: a recessed field with a fine inner edge. */
+.field {
+  background: var(--field);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-field);
+}
+/* Something that floats above the page. */
+.floating {
+  background: var(--paper);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+}
+/* The study partner's mark: a dotted rule in ink (its words are not yet evidence). */
+.marginalia {
+  border-left: 2px dotted var(--ink-3);
+  padding-left: 0.75rem;
+}
+/* Thin scrollbars inside rails and sheets. */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+
+/*
+ * Claim links in prose: quiet at rest (a faint dotted rule), solid indigo on
+ * hover, focus and when selected. Entity links keep their own solid colour
+ * underline (EntityInline) and glossary words a dotted ink one, so the three
+ * read differently.
+ */
+.claim-link {
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-decoration-color: color-mix(in oklab, var(--indigo-tint) 75%, transparent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  transition: text-decoration-color 150ms var(--ease-out-quart), background-color 150ms var(--ease-out-quart);
+  border-radius: 2px;
+}
+.claim-link:hover,
+.claim-link:focus-visible,
+.claim-link[aria-current="true"] {
+  text-decoration-style: solid;
+  text-decoration-color: var(--indigo);
+}
+.claim-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.claim-link[aria-current="true"] {
+  background: var(--indigo-wash);
+  box-shadow: 0 0 0 3px var(--indigo-wash);
+}
+/* Glossary terms: dotted underline. */
+.term {
+  cursor: help;
+  text-decoration: underline dotted var(--ink-3);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+/* Touch: standalone controls are at least 40px tall (inline chips and text buttons excepted). */
+@media (pointer: coarse) {
+  [data-slot="button"]:not([data-size="xs"]),
+  [data-slot="popover-trigger"]:not(.inline-flex.h-7),
+  [data-slot="accordion-trigger"],
+  [data-slot="command-item"] {
+    min-height: 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* MapLibre controls and popups inherit the UI face and the tokens. */
+.maplibregl-ctrl,
+.maplibregl-popup-content {
+  font-family: var(--font-ui);
+}
+.maplibregl-popup-content {
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: var(--shadow-pop);
+}
+.maplibregl-ctrl-group {
+  border-radius: var(--radius-md) !important;
+  box-shadow: none !important;
+  border: 1px solid var(--rule);
+  background: var(--paper) !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top-color: var(--rule) !important;
+}
+
+details > summary {
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+
+/* Folded parts of an era page print in full. */
+@media print {
+  .part-body[hidden] {
+    display: block !important;
+  }
+}
+
+/*
+ * One focus indicator everywhere: a solid 2px indigo outline, 2px clear of the
+ * element (3:1 or better against paper in both themes). Component rings stay
+ * as decoration; this is the indicator a keyboard user can rely on.
+ */
+:where(a, button, input, select, textarea, summary, [tabindex], [role="slider"], [role="button"], [contenteditable]):focus-visible {
+  outline: 2px solid var(--indigo) !important;
+  outline-offset: 2px !important;
+}

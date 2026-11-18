@@ -1,0 +1,58 @@
+/* MapLibre controls, in both themes. Scoped to the map module. */
+.maplibregl-ctrl-group,
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  background: color-mix(in oklab, var(--paper) 88%, transparent) !important;
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+  box-shadow: none !important;
+  backdrop-filter: blur(6px);
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--ink-2) !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top-color: var(--rule) !important;
+}
+.dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon,
+.dark .maplibregl-ctrl-attrib-button {
+  filter: invert(0.85);
+}
+.maplibregl-popup-content {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--rule);
+  font-family: var(--font-ui);
+  border-radius: 8px;
+}
+.maplibregl-popup-content a {
+  color: var(--indigo);
+}
+.maplibregl-popup-tip {
+  border-top-color: var(--paper) !important;
+  border-bottom-color: var(--paper) !important;
+}
+
+/* Attribution stays a small (i) until hovered or focused, so it never covers the map. */
+.maplibregl-ctrl-attrib.maplibregl-compact:not(:hover):not(:focus-within) .maplibregl-ctrl-attrib-inner {
+  display: none;
+}
+.maplibregl-ctrl-attrib.maplibregl-compact:not(:hover):not(:focus-within) {
+  padding: 0;
+  min-height: 24px;
+  min-width: 24px;
+}
+
+/* The note an outline shows on hover: quiet, and never in the pointer's way. */
+.extent-hover {
+  pointer-events: none;
+}
+.extent-hover .maplibregl-popup-content,
+.extent-popup .maplibregl-popup-content {
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 7px 10px;
+}
+.extent-hover .maplibregl-popup-tip {
+  display: none;
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@pramana/connectors",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "description": "Read-only clients for open knowledge sources: Wikidata, Wikipedia, Internet Archive, Crossref/DOI, Open Library, web pages.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@pramana/core": "workspace:*",
+    "zod": "^4.6.7"
+  }
+}

@@ -1,0 +1,50 @@
+/*
+ * The canvas ground (docs/visual.md §6): chuna, with a 16px dot grid drawn in
+ * a third of ink-3 (the rule colour alone is lost against chuna). The board
+ * (React Flow) draws its own dots in the same colour and moves them with the
+ * view; the phone list draws them here.
+ */
+.canvas-ground {
+  background-color: var(--chuna);
+}
+div.canvas-ground:not(:has(.react-flow)) {
+  background-image: radial-gradient(color-mix(in oklch, var(--ink-3) 32%, transparent) 1.2px, transparent 1.2px);
+  background-size: 16px 16px;
+}
+.canvas-ground .react-flow {
+  --xy-background-color: var(--chuna);
+  --xy-node-border-radius: 6px;
+  --xy-selection-background-color: color-mix(in oklch, var(--indigo) 8%, transparent);
+  --xy-selection-border: 1px dotted var(--indigo);
+  --xy-handle-background-color: var(--paper);
+  --xy-handle-border-color: var(--indigo);
+  --xy-attribution-background-color: transparent;
+  background: var(--chuna);
+}
+/* A tile's edge darkens under the pointer, as every tile's does (.tile); selected, it turns indigo. */
+.canvas-tile {
+  transition: border-color 150ms var(--ease-out-quart);
+}
+.canvas-tile:hover {
+  border-color: color-mix(in oklab, var(--ink) 28%, var(--rule));
+}
+.canvas-tile[data-pending]:hover {
+  border-color: var(--ink-2);
+}
+.canvas-ground .react-flow__node.selected > div > .canvas-tile {
+  border-color: color-mix(in oklch, var(--indigo) 55%, var(--rule));
+}
+/* Link labels sit above the tiles: a short line between two tiles would otherwise hide its words. */
+.canvas-ground .react-flow__edgelabel-renderer {
+  z-index: 1;
+}
+.canvas-ground .react-flow__attribution a {
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .canvas-ground .react-flow__node:not(.dragging) {
+    transition: transform 200ms var(--ease-out-quart);
+  }
+}

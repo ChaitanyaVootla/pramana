@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pramana
+      POSTGRES_PASSWORD: pramana
+      POSTGRES_DB: pramana
+    ports:
+      - "127.0.0.1:5442:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+volumes:
+  pgdata:

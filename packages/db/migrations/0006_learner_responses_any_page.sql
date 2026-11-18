@@ -1,0 +1,1 @@
+ALTER TABLE "learner_responses" ALTER COLUMN "page_id" DROP NOT NULL;

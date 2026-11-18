@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "pramana": {
+      "type": "stdio",
+      "command": "node_modules/.bin/tsx",
+      "args": ["apps/mcp/src/main.ts"],
+      "env": {}
+    }
+  }
+}

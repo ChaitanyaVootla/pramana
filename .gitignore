@@ -1,0 +1,20 @@
+node_modules/
+# Next build dirs: one per dev server (NEXT_DIST_DIR) and the alternating prod builds.
+.next/
+.next-*/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.local
+# Local runtime data: snapshots of source texts, HTTP cache. Never commit.
+data/*
+!data/.gitkeep
+.DS_Store
+.turbo/
+next-env.d.ts
+apps/web/public/maplibre-gl-worker.mjs
+.pipeline.lock
+.migration.lock
+.logs/
+.next-prod-current
