@@ -16,6 +16,7 @@ import {
   listPages,
   type AgeStripItem,
   type ChangesetView,
+  type ClaimCard,
   type MapFeature,
   type PageSummary,
   type PageView,
@@ -24,7 +25,7 @@ import { BookOpen, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { LiveNotes } from "@/components/ai/LiveNotes";
 import { EvidenceSeal } from "@/components/evidence/EvidenceSeal";
-import { AgesExplorer, type AgeDetail, type AgeProgress } from "@/components/home/AgesExplorer";
+import { AgesExplorer, type Age, type AgeDetail, type AgeProgress } from "@/components/home/AgesExplorer";
 import { AgeLine } from "@/components/time/AgeLine";
 import { FirstSteps } from "@/components/learn/FirstSteps";
 import { LearnedTodayLine } from "@/components/learn/LearnedToday";
@@ -138,9 +139,10 @@ function ageDetail(page: PageSummary, view: PageView): AgeDetail {
 }
 
 /**
- * The home page opens on the subject itself: the age band with the year
- * cursor and the atlas under it, full width (docs/visual.md §6). A short head
- * sits above; the written ages follow, the one the learner is in large.
+ * The home page (docs/visual.md §6). It opens on the slab: the promise in one
+ * line, what to do next, and one real claim with the words it rests on. Then
+ * the subject itself (the age band with the year cursor and the atlas under
+ * it), and the chronicle: every age in order, the written ones in full.
  */
 export default async function Home({
   searchParams,
@@ -230,155 +232,258 @@ export default async function Home({
   const featuredSlug = lastRead?.slug ?? (first ? null : (start?.slug ?? null));
   const featured = featuredSlug ? eras.find((p) => p.slug === featuredSlug) : undefined;
 
+  // One real claim with the words it rests on, shown in the opening: the promise, demonstrated.
+  const example = specimen([
+    ...(featured ? [views.get(featured.slug)!] : []),
+    ...eras.filter((p) => p.slug !== featured?.slug).map((p) => views.get(p.slug)!),
+  ]);
+  // The whole spine in time order: written ages as full rows, the rest as one quiet line each.
+  const eraBySlug = new Map(eras.map((p) => [p.slug, p]));
+  const spine = [...ages].sort((a, b) => a.from - b.from);
+  const offSpine = eras.filter((p) => !spine.some((a) => a.page?.slug === p.slug));
+
   return (
-    <Frame className="pt-5 pb-4 sm:pt-6">
-      {/* On a phone the line is time comes first: every age on one compact rule, the atlas's year as the cursor.
-          Wider screens have the full band with the atlas below. */}
-      {ages.length > 0 && (
-        <AgeLine ages={ages} mark={ATLAS.initialYear ?? null} progress={agesProgress} size="compact" className="mb-5 md:hidden" />
-      )}
-      {/* ------------------------------------------------ what this is, and what is next (docs/visual.md §6) */}
-      <section className={cn("grid items-start gap-x-10 gap-y-5", featured && "lg:grid-cols-[minmax(0,1fr)_minmax(20rem,30rem)]")}>
-        <div className="min-w-0">
-          <h1 className="max-w-[22ch] text-3xl text-ink sm:text-4xl">
-            Indian history, with the evidence attached.
-          </h1>
-          <p className="mt-2 max-w-[56ch] font-sans text-note text-ink-2">
-            Every statement points to the exact words it rests on, in a source you can open; where
-            historians disagree, you see each reading.
-          </p>
-          <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 font-sans text-sm text-ink-2">
-            {learned && <LearnedTodayLine data={learned} />}
-            <p>
-              <Link href="/canvas" className="text-ink-2 underline decoration-rule underline-offset-2 hover:text-ink hover:decoration-ink-3">
-                Your canvases: anything on the site, side by side
-              </Link>
+    <>
+      {/* ------------------------------------------------ the opening: the slab runs on from the top bar (docs/visual.md §6) */}
+      <section className="on-slab">
+        <Frame className={cn("grid items-end gap-x-14 gap-y-10 pt-8 pb-10 sm:pt-12 sm:pb-14 lg:pt-16 lg:pb-16", example && "lg:grid-cols-[minmax(0,1fr)_minmax(24rem,34rem)]")}>
+          <div className="min-w-0">
+            <h1 className="max-w-[14ch] font-display text-5xl text-ink sm:text-6xl 2xl:text-[5.5rem] 2xl:leading-[0.94]">
+              Indian history, with the evidence attached.
+            </h1>
+            <p className="mt-5 max-w-[52ch] font-sans text-lg text-ink-2">
+              Every statement points to the exact words it rests on, in a source you can open. Where historians
+              disagree, you see each reading.
             </p>
+            {featured && (
+              <ContinueBlock
+                page={featured}
+                view={views.get(featured.slug)!}
+                progress={agesProgress[featured.slug]}
+                today={today && today.pageSlug === featured.slug ? { ...today, cards: dueNow.length } : null}
+                resume={resumeAt}
+                startReason={!lastRead && recommended && recommended.pageSlug === featured.slug ? recommended.reason : null}
+                startChapter={!lastRead && recommended && recommended.pageSlug === featured.slug ? recommended.chapterId : null}
+                isResume={Boolean(lastRead)}
+                effort={progress.effort}
+                known={progress.deck.known}
+                due={progress.deck.due}
+              />
+            )}
           </div>
-        </div>
-        {featured && (
-          <ContinueBlock
-            page={featured}
-            view={views.get(featured.slug)!}
-            progress={agesProgress[featured.slug]}
-            today={today && today.pageSlug === featured.slug ? { ...today, cards: dueNow.length } : null}
-            resume={resumeAt}
-            startReason={
-              !lastRead && recommended && recommended.pageSlug === featured.slug ? recommended.reason : null
-            }
-            startChapter={
-              !lastRead && recommended && recommended.pageSlug === featured.slug ? recommended.chapterId : null
-            }
-            isResume={Boolean(lastRead)}
-            effort={progress.effort}
-            known={progress.deck.known}
-            due={progress.deck.due}
-          />
-        )}
+          {example && <Specimen {...example} />}
+        </Frame>
       </section>
 
-      {first && <FirstSteps data={first} className="mt-6" />}
-
-      {/* ------------------------------------------------ every age, and the map through time */}
-      <section aria-labelledby="ages-h" className="mt-6 sm:mt-8">
-        <h2 id="ages-h" className="sr-only">
-          The ages, and the map through time
-        </h2>
-        {ages.length ? (
-          <AgesExplorer
-            ages={ages}
-            places={places}
-            timeline={timeline}
-            pageByEntity={pageByEntity}
-            spec={ATLAS}
-            progress={agesProgress}
-            details={details}
-            overviewHref={overview ? `/p/${overview.slug}` : null}
-          />
-        ) : (
-          <EmptyState
-            title="No ages yet."
-            action={
-              <Link href="/connect" className={cn(buttonVariants({ variant: "outline" }), "h-9 px-3.5 text-ui")}>
-                Connect your AI
-              </Link>
-            }
-          >
-            Ask your AI to propose the spine of Indian history, then see it under Proposed changes; the
-            band and the map appear here.
-          </EmptyState>
-        )}
-      </section>
-
-      {/* ------------------------------------------------ the pages written so far, in time order, each with its own picture */}
-      {written > 0 && (
-        <section aria-labelledby="pages-h" className="mt-10 sm:mt-12">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-            <h2 id="pages-h" className="text-2xl text-ink">
-              Pages to read
-            </h2>
-            <p className="font-sans text-sm text-ink-3">
-              {strip?.spine
-                ? `${capital(word(written))} of the ${strip.spine} ages ${written === 1 ? "is" : "are"} written so far`
-                : `${capital(word(written))} ${written === 1 ? "age is" : "ages are"} written so far`}
-              , each a story in parts with its sources open beside it.
-            </p>
-          </div>
-          {/* Tiles (docs/visual.md §4): 1 across on a phone, 2 from 640px, 3 from 1024px, 4 from 1536px. The one
-              place that says "you are here" is the Continue block at the top; the tiles are uniform. */}
-          <ol className="mt-5 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {eras.map((p) => (
-              <li key={p.slug} className="min-w-0">
-                <AgeTile page={p} view={views.get(p.slug)!} progress={agesProgress[p.slug]} />
-              </li>
-            ))}
-          </ol>
-          {ages.some((a) => !a.page) && (
-            <p className="mt-4 font-sans text-sm text-ink-3">
-              Not written yet:{" "}
-              {ages
-                .filter((a) => !a.page)
-                .map((a, i, all) => (
-                  <span key={a.id}>
-                    <Link
-                      href={`/e/${a.slug}`}
-                      className="text-ink-2 underline decoration-rule underline-offset-2 hover:text-ink hover:decoration-ink-3"
-                    >
-                      {a.label}
-                    </Link>
-                    {i < all.length - 1 ? ", " : "."}
-                  </span>
-                ))}
-            </p>
-          )}
-        </section>
-      )}
-
-      {/* The study partner's latest notes, as marginalia (docs/visual.md §7); nothing when there are none. */}
-      <LiveNotes recent limit={3} layout="row" className="mt-10 sm:mt-12" />
-
-      {/* ------------------------------------------------ what changed lately (every change is at /audit) */}
-      {applied.length > 0 && (
-        <section aria-labelledby="changes-h" className="mt-10 font-sans sm:mt-12">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-            <h2 id="changes-h" className="font-serif text-xl text-ink">
-              What changed lately
-            </h2>
-            <Link href="/audit" className="text-sm text-ink-3 no-underline hover:text-ink hover:underline">
-              Every change
+      <Frame className="pt-6 pb-4 sm:pt-8">
+        {/* What the learner met today, and their canvases: one quiet line under the opening. */}
+        <div className="flex flex-wrap gap-x-6 gap-y-1 font-sans text-sm text-ink-2">
+          {learned && <LearnedTodayLine data={learned} />}
+          <p>
+            <Link href="/canvas" className="text-ink-2 underline decoration-rule underline-offset-2 hover:text-ink hover:decoration-ink-3">
+              Your canvases: anything on the site, side by side
             </Link>
+          </p>
+        </div>
+
+        {/* On a phone the line is time: every age on one compact rule, the atlas's year as the cursor.
+            Wider screens have the full band with the atlas below. */}
+        {ages.length > 0 && (
+          <AgeLine ages={ages} mark={ATLAS.initialYear ?? null} progress={agesProgress} size="compact" className="mt-6 md:hidden" />
+        )}
+
+        {first && <FirstSteps data={first} className="mt-6" />}
+
+        {/* ------------------------------------------------ every age, and the map through time */}
+        <section aria-labelledby="ages-h" className="mt-8 sm:mt-12">
+          <SectionHead id="ages-h" title="Nine thousand years on one line" aside="Pick an age to see its borders, or move the year and watch them change." />
+          <div className="mt-5">
+            {ages.length ? (
+              <AgesExplorer
+                ages={ages}
+                places={places}
+                timeline={timeline}
+                pageByEntity={pageByEntity}
+                spec={ATLAS}
+                progress={agesProgress}
+                details={details}
+                overviewHref={overview ? `/p/${overview.slug}` : null}
+              />
+            ) : (
+              <EmptyState
+                title="No ages yet."
+                action={
+                  <Link href="/connect" className={cn(buttonVariants({ variant: "outline" }), "h-9 px-3.5 text-ui")}>
+                    Connect your AI
+                  </Link>
+                }
+              >
+                Ask your AI to propose the spine of Indian history, then see it under Proposed changes; the
+                band and the map appear here.
+              </EmptyState>
+            )}
           </div>
-          <RecentChanges items={applied.slice(0, 6)} />
         </section>
-      )}
-    </Frame>
+
+        {/* ------------------------------------------------ the chronicle: every age in order, the written ones in full */}
+        {written > 0 && (
+          <section aria-labelledby="pages-h" className="mt-14 sm:mt-20">
+            <SectionHead
+              id="pages-h"
+              title="The ages, in order"
+              aside={`${
+                strip?.spine
+                  ? `${capital(word(written))} of the ${strip.spine} ages ${written === 1 ? "is" : "are"} written so far`
+                  : `${capital(word(written))} ${written === 1 ? "age is" : "ages are"} written so far`
+              }, each a story in parts with its sources open beside it.`}
+            />
+            <ol className="mt-5 border-b border-rule">
+              {spine.map((a, i) => {
+                const page = a.page ? eraBySlug.get(a.page.slug) : undefined;
+                return (
+                  <li key={a.id} className="border-t border-rule">
+                    {page ? (
+                      <AgeRow n={i + 1} page={page} view={views.get(page.slug)!} progress={agesProgress[page.slug]} />
+                    ) : (
+                      <UnwrittenRow n={i + 1} age={a} />
+                    )}
+                  </li>
+                );
+              })}
+              {offSpine.map((p) => (
+                <li key={p.slug} className="border-t border-rule">
+                  <AgeRow n={null} page={p} view={views.get(p.slug)!} progress={agesProgress[p.slug]} />
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {/* The study partner's latest notes, as marginalia (docs/visual.md §7); nothing when there are none. */}
+        <LiveNotes recent limit={3} layout="row" className="mt-14 sm:mt-20" />
+
+        {/* ------------------------------------------------ what changed lately (every change is at /audit) */}
+        {applied.length > 0 && (
+          <section aria-labelledby="changes-h" className="mt-14 font-sans sm:mt-20">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+              <h2 id="changes-h" className="text-2xl text-ink">
+                What changed lately
+              </h2>
+              <Link href="/audit" className="text-sm text-ink-2 underline decoration-rule underline-offset-2 hover:text-ink hover:decoration-ink-3">
+                Every change
+              </Link>
+            </div>
+            <RecentChanges items={applied.slice(0, 6)} />
+          </section>
+        )}
+      </Frame>
+    </>
+  );
+}
+
+/** A section's head: the title, with one sentence of explanation on the same baseline at the right. */
+function SectionHead({ id, title, aside }: { id: string; title: string; aside?: string }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-10 gap-y-1">
+      <h2 id={id} className="text-3xl text-ink sm:text-4xl">
+        {title}
+      </h2>
+      {aside && <p className="max-w-[52ch] font-sans text-note text-ink-2">{aside}</p>}
+    </div>
+  );
+}
+
+interface SpecimenData {
+  claim: { id: string; text: string; level: ClaimCard["level"] };
+  quote: string;
+  source: string;
+  locator: string;
+  page: { slug: string; title: string };
+}
+
+/**
+ * Picks the claim shown in the opening: a short statement of fact whose quote
+ * was found word for word in the stored copy of its source. The best checked
+ * wins, then the nearest to the events (a primary source before a later one).
+ * Deterministic, so the opening does not change between visits.
+ */
+function specimen(views: PageView[]): SpecimenData | null {
+  let best: SpecimenData | null = null;
+  let bestScore = -1;
+  for (const view of views) {
+    for (const c of Object.values(view.claims)) {
+      if (c.kind !== "fact" || c.text.length > 150 || c.level < 2) continue;
+      for (const cit of c.citations) {
+        const quote = cit.excerpt.quote?.trim();
+        const status = cit.excerpt.verification.status;
+        if (!quote || quote.length < 40 || quote.length > 240 || cit.stance !== "supports") continue;
+        if (status !== "exact" && status !== "human_attested") continue;
+        const tier = cit.excerpt.source.tier;
+        const score = c.level * 10 + (tier === "primary" ? 6 : tier === "secondary" ? 3 : 0);
+        if (score > bestScore) {
+          bestScore = score;
+          best = {
+            claim: { id: c.id, text: c.text, level: c.level },
+            quote,
+            source: cit.excerpt.source.short || cit.excerpt.source.title,
+            locator: cit.excerpt.locatorLabel,
+            page: { slug: view.page.slug, title: view.page.title },
+          };
+        }
+      }
+    }
+  }
+  return best;
+}
+
+/**
+ * The promise, shown rather than said: one claim from the site, the words it
+ * rests on cut into a field under it, and where those words are. The line
+ * between them is the chain of evidence in miniature (the claim page draws it
+ * in full).
+ */
+function Specimen({ claim, quote, source, locator, page }: SpecimenData) {
+  return (
+    <aside aria-labelledby="specimen-h" className="min-w-0 font-sans">
+      <p id="specimen-h" className="text-ui text-ink-3">
+        One claim from {page.title}, and what it rests on
+      </p>
+      <ol className="mt-3">
+        <li className="relative pb-5 pl-7">
+          <span className="absolute top-2 left-0 size-2.5 rounded-full bg-ink" aria-hidden />
+          <span className="absolute top-5 bottom-0 left-[4.5px] w-px bg-rule" aria-hidden />
+          <p className="font-heading text-xl leading-snug text-ink sm:text-2xl sm:leading-snug">{claim.text}</p>
+        </li>
+        <li className="relative pb-5 pl-7">
+          <span className="absolute top-2 left-0 size-2.5 rounded-full border-2 border-ink" aria-hidden />
+          <span className="absolute top-5 bottom-0 left-[4.5px] w-px bg-rule" aria-hidden />
+          <p className="text-sm text-ink-3">The words, as the source has them</p>
+          <blockquote className="field mt-1.5 px-4 py-3 font-serif text-base leading-relaxed text-ink">
+            “{quote}”
+          </blockquote>
+        </li>
+        <li className="relative pl-7">
+          <span className="absolute top-1.5 left-0 size-2.5 rounded-full border-2 border-ink" aria-hidden />
+          <p className="text-ui text-ink-2">
+            {source}
+            {locator ? `, ${locator}` : ""}
+          </p>
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-ui">
+            <EvidenceSeal level={claim.level} />
+            <Link href={`/c/${claim.id}`} className="text-ink underline decoration-ink-3 underline-offset-4 hover:decoration-ink">
+              Follow the whole chain
+            </Link>
+          </p>
+        </li>
+      </ol>
+    </aside>
   );
 }
 
 /**
- * What is next, beside the head on the first screen (docs/visual.md §6): the
- * age the learner is in, or should start with, one progress bar and two
- * buttons. Dense; the age's picture and story are in "Pages to read" below.
+ * What is next, under the opening's headline (docs/visual.md §6): the age the
+ * learner is in, or should start with, where they stand in one line, and two
+ * buttons. On the slab, so the filled button is white.
  */
 function ContinueBlock({
   page,
@@ -415,59 +520,44 @@ function ContinueBlock({
   /** Cards due now, across the deck. */
   due: number;
 }) {
-  const deva = devanagari(page.entity);
   const n = view.stats.claims;
   const parts = view.page.blocks.filter((b) => b.type === "chapter").length;
   const firstPart = startChapter ?? view.page.blocks.find((b) => b.type === "chapter")?.id;
-  const button = cn(buttonVariants(), "h-9 px-3.5 text-ui");
-  const outline = cn(buttonVariants({ variant: "outline" }), "h-9 px-3.5 text-ui");
+  const button = cn(buttonVariants({ size: "lg" }), "h-auto min-h-11 max-w-full shrink py-2 text-left whitespace-normal");
+  const outline = cn(buttonVariants({ variant: "outline", size: "lg" }), "border-rule bg-transparent hover:bg-rule-soft");
   // One line of standing, not a run of counters: how far through this age, and how much is remembered ("remembered" counts only cards seen).
   const standing = [
-    progress && progress.parts > 0 ? `${progress.partsStudied} of ${progress.parts} parts studied` : "",
+    progress && progress.parts > 0 ? `${progress.partsStudied} of ${progress.parts} parts studied` : parts > 0 ? `${parts} parts` : "",
     effort.seen > 0 ? `${known} of ${effort.seen} cards remembered` : "",
   ].filter(Boolean);
   return (
-    <aside aria-labelledby="continue-h" className="min-w-0 font-sans lg:pt-1">
-      <p id="continue-h" className="text-ui text-ink-2">
-        {isResume ? "Continue learning" : "Start here"}
-      </p>
-      <p className="mt-0.5 font-serif text-xl leading-tight text-ink">
-        <Link href={`/p/${page.slug}`} className="no-underline hover:text-indigo">
+    <aside aria-labelledby="continue-h" className="mt-8 min-w-0 border-t border-rule pt-5 font-sans sm:mt-10">
+      <p id="continue-h" className="text-note text-ink-2">
+        {isResume ? "You are reading" : "Start with"}{" "}
+        <Link href={`/p/${page.slug}`} className="font-medium text-ink underline decoration-ink-3 underline-offset-4 hover:decoration-ink">
           {page.title}
         </Link>
-        {deva && (
-          <span lang="hi" className="ml-2 font-deva text-xl text-ink-2">
-            {deva}
-          </span>
-        )}
-        <span className="ml-2 font-sans text-sm text-ink-3 tnum">
-          {page.entity?.whenLabel}
-          {parts > 0 ? `, ${parts} parts` : ""}
+        <span className="text-ink-3 tnum">
+          {page.entity?.whenLabel ? `, ${page.entity.whenLabel}` : ""}
+          {standing.length ? `. ${capital(standing.join(", "))}.` : "."}
         </span>
       </p>
-      {startReason && <p className="mt-1.5 text-note leading-snug text-ink-2">{startReason}</p>}
-      {isResume ? (
-        <>
-          {progress && progress.parts > 0 && (
-            <div className="mt-3 h-1 overflow-hidden rounded-full bg-rule" aria-hidden>
-              <div
-                className="h-full rounded-full bg-ink/75"
-                style={{ width: `${Math.round((progress.partsStudied / progress.parts) * 100)}%` }}
-              />
-            </div>
-          )}
-          {standing.length > 0 && <p className="mt-1.5 text-sm text-ink-3 tnum">{standing.join(", ")}</p>}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link
-              href={today ? "/learn/today" : "/learn"}
-              className={cn(button, "h-auto min-h-9 max-w-full shrink py-1.5 text-left whitespace-normal")}
-            >
-              <GraduationCap className="size-4 shrink-0" aria-hidden />
-              <span className="ml-2 min-w-0">
+      {startReason && <p className="mt-1.5 max-w-[60ch] text-note leading-snug text-ink-2">{startReason}</p>}
+      {isResume && progress && progress.parts > 0 && (
+        <div className="mt-3 h-1 max-w-md overflow-hidden rounded-full bg-rule-soft" aria-hidden>
+          <div className="h-full rounded-full bg-ink" style={{ width: `${Math.round((progress.partsStudied / progress.parts) * 100)}%` }} />
+        </div>
+      )}
+      <div className="mt-4 flex flex-wrap gap-2.5">
+        {isResume ? (
+          <>
+            <Link href={today ? "/learn/today" : "/learn"} className={button}>
+              <GraduationCap className="size-[18px] shrink-0" aria-hidden />
+              <span className="min-w-0">
                 {today ? (
                   <>
-                    Continue today's session
-                    <span className="block text-sm font-normal text-primary-foreground">
+                    Continue today’s session
+                    <span className="block text-sm font-normal">
                       Part {today.number}, {today.title}
                       {today.cards ? `, then ${today.cards} ${today.cards === 1 ? "card" : "cards"}` : ""}
                     </span>
@@ -481,92 +571,140 @@ function ContinueBlock({
             </Link>
             {today ? (
               <Link href={`/p/${today.pageSlug}#${today.chapterId}-title`} className={outline}>
-                <BookOpen className="size-4" aria-hidden /> Read only Part {today.number}
+                <BookOpen className="size-[18px]" aria-hidden /> Read only Part {today.number}
               </Link>
             ) : (
               <Link href={`/p/${page.slug}${resume ? `#${resume}` : ""}`} className={outline}>
-                <BookOpen className="size-4" aria-hidden /> Keep reading
+                <BookOpen className="size-[18px]" aria-hidden /> Keep reading
               </Link>
             )}
-          </div>
-        </>
-      ) : (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link href={`/p/${page.slug}${firstPart ? `#${firstPart}-title` : ""}`} className={button}>
-            <BookOpen className="size-4" aria-hidden /> Read the page
-          </Link>
-          {n > 0 && (
-            <Link href="/learn" className={outline}>
-              Quiz me on it
+          </>
+        ) : (
+          <>
+            <Link href={`/p/${page.slug}${firstPart ? `#${firstPart}-title` : ""}`} className={button}>
+              <BookOpen className="size-[18px]" aria-hidden /> Read the page
             </Link>
-          )}
-        </div>
-      )}
+            {n > 0 && (
+              <Link href="/learn" className={outline}>
+                Quiz me on it
+              </Link>
+            )}
+          </>
+        )}
+      </div>
     </aside>
   );
 }
 
 /**
- * A written age as a tile (docs/visual.md §4): a picture from inside its page
- * (never the lead picture, which the column beside the atlas shows; the lead
- * only when the page has no other), then its dates, title, one line of story,
- * what it holds, and how far the learner has got.
+ * A written age as a row of the chronicle (docs/visual.md §6): its place in
+ * the spine and its dates, then its title and one line of story, a picture
+ * from inside its page, and what it holds with how far the learner has got.
+ * The whole row is one link.
  */
-function AgeTile({ page, view, progress }: { page: PageSummary; view: PageView; progress?: AgeProgress }) {
+function AgeRow({ n, page, view, progress }: { n: number | null; page: PageSummary; view: PageView; progress?: AgeProgress }) {
   const lead = leadImage(page, view);
   const picture = insidePicture(view, lead) ?? lead;
   const deva = devanagari(page.entity);
-  const n = view.stats.claims;
-  const found = n - (view.stats.byLevel[0] ?? 0) - (view.stats.byLevel[1] ?? 0);
+  const claims = view.stats.claims;
+  const found = claims - (view.stats.byLevel[0] ?? 0) - (view.stats.byLevel[1] ?? 0);
   const human = view.stats.byLevel[4] ?? 0;
   const parts = view.page.blocks.filter((b) => b.type === "chapter").length;
   const ago = yearsAgo(page.entity?.bounds);
   const studied = progress && progress.state !== "untouched" && progress.parts > 0 ? progress : undefined;
   return (
-    <Link href={`/p/${page.slug}`} className="tile group flex h-full flex-col no-underline" aria-label={`${page.title}: open the page`}>
-      <span className="relative block aspect-[16/9] overflow-hidden bg-field">
-        {picture ? (
-          <>
-            <CommonsImage file={picture} fill sizes="(min-width: 1536px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" decorative />
-            <ImaginingTag representation={picture.representation} className="absolute top-2 left-2" />
-          </>
-        ) : (
-          <PeriodBand bounds={page.entity?.bounds ?? null} className="h-full" />
-        )}
+    <Link
+      href={`/p/${page.slug}`}
+      aria-label={`${page.title}: open the page`}
+      className="group -mx-3 grid grid-cols-[minmax(0,1fr)_4.5rem] items-start gap-x-4 gap-y-2 rounded-md px-3 py-5 no-underline transition-colors hover:bg-paper sm:grid-cols-[minmax(0,1fr)_11rem] md:grid-cols-[11rem_minmax(0,1fr)_13rem] md:gap-x-8 xl:grid-cols-[13rem_minmax(0,1fr)_14rem_16rem] xl:py-6"
+    >
+      <span className="col-span-2 flex items-baseline gap-3 font-sans md:col-span-1 md:block">
+        {n !== null && <span className="text-sm text-ink-3 tnum md:block">{String(n).padStart(2, "0")}</span>}
+        <span className="font-heading text-lg text-ink tnum md:mt-1 md:block md:text-xl">{page.entity?.whenLabel}</span>
+        {ago && <span className="text-sm text-ink-3 md:mt-0.5 md:block">{ago}</span>}
       </span>
-      <span className="flex min-w-0 flex-1 flex-col px-4 pt-3 pb-4">
-        <span className="font-sans text-xs text-ink-3 tnum">
-          {page.entity?.whenLabel}
-          {ago ? `, ${ago}` : ""}
-        </span>
-        <span className="mt-1 font-serif text-xl leading-tight text-ink transition-colors group-hover:text-indigo">
+      <span className="min-w-0">
+        <span className="block font-heading text-2xl leading-tight text-ink transition-colors group-hover:text-indigo sm:text-3xl">
           {page.title}
           {deva && (
-            <span lang="hi" className="ml-2 font-deva text-xl text-ink-3">
+            <span lang="hi" className="ml-2.5 text-[0.82em] text-ink-3">
               {deva}
             </span>
           )}
         </span>
-        {page.summary && <span className="mt-1.5 line-clamp-2 font-sans text-note leading-snug text-ink-2">{page.summary}</span>}
-        <span className="mt-auto flex items-center gap-2 pt-3 font-sans text-xs text-ink-3">
-          <EvidenceSeal level={human === n && n > 0 ? 4 : found === n && n > 0 ? 2 : 1} />
+        {page.summary && <span className="mt-2 block max-w-[62ch] font-serif text-base leading-normal text-ink-2 max-sm:hidden">{page.summary}</span>}
+        <span className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-sans text-sm text-ink-3 max-sm:hidden xl:hidden">
+          <EvidenceSeal level={human === claims && claims > 0 ? 4 : found === claims && claims > 0 ? 2 : 1} />
           <span className="tnum">
             {parts > 0 ? `${parts} parts, ` : ""}
-            {n} claims
+            {claims} claims
+            {studied ? `, ${studied.partsStudied} of ${studied.parts} studied` : ""}
           </span>
-          {studied && (
-            <span className="ml-auto text-ink-2 tnum">
-              {studied.partsStudied} of {studied.parts} studied
-            </span>
-          )}
         </span>
-        {/* The learner's way through the age, as on the band: a hairline, not a card. */}
-        {studied && (
-          <span className="mt-2 block h-0.5 w-full overflow-hidden rounded-full bg-rule" aria-hidden>
-            <span className="block h-full bg-ink/75" style={{ width: `${Math.round((studied.partsStudied / studied.parts) * 100)}%` }} />
-          </span>
+      </span>
+      <span className="relative block aspect-square overflow-hidden rounded-md bg-field sm:aspect-[16/10]">
+        {picture ? (
+          <>
+            <CommonsImage file={picture} fill sizes="(min-width: 768px) 14rem, 11rem" decorative />
+            <ImaginingTag representation={picture.representation} className="absolute top-1.5 left-1.5 max-sm:hidden" />
+          </>
+        ) : (
+          <PeriodBand bounds={page.entity?.bounds ?? null} className="h-full" compact />
         )}
       </span>
+      {/* Phones: the story and the counts run the full width under the title and its picture. */}
+      <span className="col-span-2 min-w-0 sm:hidden">
+        {page.summary && <span className="block font-serif text-base leading-normal text-ink-2">{page.summary}</span>}
+        <span className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-sans text-sm text-ink-3">
+          <EvidenceSeal level={human === claims && claims > 0 ? 4 : found === claims && claims > 0 ? 2 : 1} />
+          <span className="tnum">
+            {parts > 0 ? `${parts} parts, ` : ""}
+            {claims} claims
+            {studied ? `, ${studied.partsStudied} of ${studied.parts} studied` : ""}
+          </span>
+        </span>
+      </span>
+      <span className="hidden min-w-0 font-sans text-sm text-ink-2 xl:block">
+        <span className="flex items-center gap-2.5">
+          <EvidenceSeal level={human === claims && claims > 0 ? 4 : found === claims && claims > 0 ? 2 : 1} />
+          <span className="tnum">
+            {parts > 0 ? `${parts} parts, ` : ""}
+            {claims} claims
+          </span>
+        </span>
+        {studied ? (
+          <>
+            <span className="mt-3 block h-1 w-full overflow-hidden rounded-full bg-rule" aria-hidden>
+              <span className="block h-full rounded-full bg-indigo" style={{ width: `${Math.round((studied.partsStudied / studied.parts) * 100)}%` }} />
+            </span>
+            <span className="mt-1.5 block text-ink-3 tnum">
+              {studied.partsStudied} of {studied.parts} parts studied
+            </span>
+          </>
+        ) : (
+          <span className="mt-2 block text-ink-3">Not started</span>
+        )}
+      </span>
+    </Link>
+  );
+}
+
+/** An age with no page yet: one quiet line in its place in the chronicle, linked to what is known of it. */
+function UnwrittenRow({ n, age }: { n: number; age: Age }) {
+  return (
+    <Link
+      href={`/e/${age.slug}`}
+      className="group -mx-3 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 rounded-md px-3 py-3 font-sans no-underline transition-colors hover:bg-paper md:grid-cols-[11rem_minmax(0,1fr)_auto] md:gap-x-8 xl:grid-cols-[13rem_minmax(0,1fr)_auto]"
+    >
+      <span className="hidden items-baseline gap-3 text-sm text-ink-3 tnum md:flex">
+        <span>{String(n).padStart(2, "0")}</span>
+        <span>{age.whenLabel}</span>
+      </span>
+      <span className="min-w-0 text-note text-ink-2 group-hover:text-ink">
+        {age.label}
+        <span className="ml-2 text-sm text-ink-3 tnum md:hidden">{age.whenLabel}</span>
+      </span>
+      <span className="text-sm text-ink-3">Not written yet</span>
     </Link>
   );
 }
@@ -579,19 +717,19 @@ function RecentChanges({ items }: { items: ChangesetView[] }) {
     byDay.set(d, [...(byDay.get(d) ?? []), c]);
   }
   return (
-    <div className="mt-2 grid gap-x-8 gap-y-4 border-t border-rule pt-3 sm:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))]">
+    <div className="mt-3 grid gap-x-10 gap-y-5 border-t border-rule pt-4 sm:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))]">
       {[...byDay.entries()].map(([day, list]) => (
         <div key={day} className="min-w-0">
           <p className="text-sm text-ink-3">{day}</p>
           <ul className="mt-1">
             {list.map((c) => (
-              <li key={c.id} className="flex min-h-9 items-baseline gap-3 border-b border-rule py-1.5 last:border-b-0">
-                <span className="w-12 shrink-0 text-xs text-ink-3 tnum">
+              <li key={c.id} className="flex min-h-9 items-baseline gap-3 border-b border-rule py-2 last:border-b-0">
+                <span className="w-12 shrink-0 text-sm text-ink-3 tnum">
                   {new Date(c.decidedAt ?? c.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                 </span>
-                <span className="min-w-0 text-ui text-ink">
+                <span className="min-w-0 text-note text-ink">
                   {c.title}
-                  <span className="block text-xs text-ink-3">
+                  <span className="block text-sm text-ink-3">
                     {actorName(c.author).replace(/^\w/, (l) => l.toUpperCase())}
                     {c.onBehalfOf ? ` for ${c.onBehalfOf.displayName}` : ""}
                     {c.decidedBy ? `, approved by ${approverName(c.decidedBy, c.delegated)}` : ""}
@@ -623,13 +761,10 @@ function PeriodBand({
   return (
     <div className={cn("relative overflow-hidden bg-field px-4", compact ? "px-2" : "h-14", className)} aria-hidden>
       <div className={cn("absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-rule", compact ? "inset-x-2" : "inset-x-4")}>
-        <div
-          className="absolute inset-y-0 rounded-full bg-indigo"
-          style={{ left: `${a}%`, width: `max(${b - a}%, 4px)` }}
-        />
+        <div className="absolute inset-y-0 rounded-full bg-indigo" style={{ left: `${a}%`, width: `max(${b - a}%, 4px)` }} />
       </div>
       {!compact && (
-        <div className="absolute inset-x-4 bottom-1.5 flex justify-between font-sans text-[0.6875rem] text-ink-3">
+        <div className="absolute inset-x-4 bottom-1.5 flex justify-between font-sans text-xs text-ink-3">
           <span>7000 BCE</span>
           <span>now</span>
         </div>
