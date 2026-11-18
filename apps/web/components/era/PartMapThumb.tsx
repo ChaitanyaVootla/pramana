@@ -144,7 +144,7 @@ function StaticPartMap({
       width="100%"
       height={HEIGHT}
       aria-hidden
-      className="absolute inset-0 rounded-md border border-rule bg-[#f6f5f1] dark:bg-[#1a1b25]"
+      className="absolute inset-0 rounded-md border border-rule bg-[#fbfbfd] dark:bg-[#191d47]"
     >
       {drawing.borders
         .filter((b) => !b.focus)
@@ -152,7 +152,7 @@ function StaticPartMap({
           <path
             key={b.id}
             d={b.d}
-            className="fill-none stroke-[#9c9ca6] dark:stroke-[#565868]"
+            className="fill-none stroke-[#9498b8] dark:stroke-[#585e94]"
             strokeWidth={0.8}
             strokeDasharray="3 2"
           />

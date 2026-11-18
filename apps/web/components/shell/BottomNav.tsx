@@ -20,8 +20,8 @@ const ITEMS = [
 /** Everything the bar itself does not carry, in the More sheet. */
 const MORE = [
   { title: "The library", items: LIBRARY.filter((s) => s.href === "/timeline" || s.href === "/people") },
-  { title: "Your desk", items: DESK.filter((s) => s.href !== "/learn") },
-  { title: "The record", items: RECORD },
+  { title: "Your desk", items: [...DESK.filter((s) => s.href !== "/learn"), ...RECORD.filter((s) => s.href === "/insights")] },
+  { title: "The record", items: RECORD.filter((s) => s.href !== "/insights") },
 ];
 
 /**

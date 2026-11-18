@@ -452,7 +452,7 @@ function Specimen({ claim, quote, source, locator, page }: SpecimenData) {
         <li className="relative pb-5 pl-7">
           <span className="absolute top-2 left-0 size-2.5 rounded-full bg-ink" aria-hidden />
           <span className="absolute top-5 bottom-0 left-[4.5px] w-px bg-rule" aria-hidden />
-          <p className="font-heading text-xl leading-snug text-ink sm:text-2xl sm:leading-snug">{claim.text}</p>
+          <p className="font-serif text-xl leading-snug text-ink sm:text-2xl sm:leading-snug">{claim.text}</p>
         </li>
         <li className="relative pb-5 pl-7">
           <span className="absolute top-2 left-0 size-2.5 rounded-full border-2 border-ink" aria-hidden />

@@ -205,7 +205,7 @@ export default async function SearchPage({
                       <BookOpen className="mt-1 size-5 shrink-0 text-indigo" aria-hidden />
                     )}
                     <span className="min-w-0">
-                      <span className="block text-lg leading-snug text-ink group-hover:text-indigo">
+                      <span className="block font-heading text-lg leading-snug text-ink group-hover:text-indigo">
                         {p.title}
                       </span>
                       {summary?.entity?.whenLabel && (
@@ -337,7 +337,7 @@ function BestMatch({ entity: e }: { entity: EntityCard }) {
       <div className="min-w-0">
         <Link
           href={`/e/${e.slug}`}
-          className="text-xl leading-snug text-ink underline decoration-transparent underline-offset-4 hover:text-indigo hover:decoration-indigo-tint"
+          className="font-heading text-xl leading-snug text-ink underline decoration-transparent underline-offset-4 hover:text-indigo hover:decoration-indigo-tint"
         >
           {e.label}
         </Link>
@@ -396,7 +396,7 @@ function EntityResult({ entity: e }: { entity: EntityCard }) {
           </span>
         )}
         <span className="min-w-0">
-          <span className="block text-base leading-snug text-ink group-hover:underline group-hover:decoration-indigo-tint group-hover:underline-offset-4">
+          <span className="block font-heading text-lg leading-snug text-ink group-hover:underline group-hover:decoration-indigo-tint group-hover:underline-offset-4">
             {e.label}
           </span>
           <span className="block font-sans text-sm text-ink-3 tnum">

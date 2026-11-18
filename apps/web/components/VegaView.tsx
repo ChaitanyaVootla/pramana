@@ -35,9 +35,9 @@ export function VegaView({ spec }: { spec: Record<string, unknown> }) {
           width: "container",
           config: {
             font: "Mukta, system-ui, sans-serif",
-            range: { category: ["#33408f", "#b07a0c", "#4f6b4a", "#9b2e26", "#545b70", "#8a90a0"] },
-            mark: { color: "#33408f" },
-            bar: { color: "#33408f", cornerRadiusEnd: 2 },
+            range: { category: ["#2733c4", "#c48a00", "#1f7446", "#b93127", "#434869", "#8a8fb5"] },
+            mark: { color: "#2733c4" },
+            bar: { color: "#2733c4", cornerRadiusEnd: 2 },
             axis: {
               labelColor: "#545b70",
               titleColor: "#1d2340",

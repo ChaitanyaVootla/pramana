@@ -327,7 +327,7 @@ export default async function SourcePage({ params }: Params) {
                   <li key={p.slug}>
                     <Link
                       href={`/p/${p.slug}`}
-                      className="text-lg text-ink no-underline hover:underline"
+                      className="font-heading text-lg text-ink no-underline hover:underline"
                     >
                       {p.title}
                     </Link>

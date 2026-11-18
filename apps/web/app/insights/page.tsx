@@ -140,7 +140,7 @@ export default async function InsightsPage() {
                 {ev.pages.map((p) => (
                   <li key={p.slug} className="grid gap-x-6 gap-y-2 py-3 sm:grid-cols-[12rem_1fr_1fr]">
                     <div className="font-sans">
-                      <Link href={`/p/${p.slug}`} className="font-serif text-base text-ink hover:underline hover:decoration-indigo-tint hover:underline-offset-3">
+                      <Link href={`/p/${p.slug}`} className="font-heading text-lg text-ink hover:underline hover:decoration-indigo-tint hover:underline-offset-3">
                         {p.title}
                       </Link>
                       <p className="text-sm text-ink-3 tnum">

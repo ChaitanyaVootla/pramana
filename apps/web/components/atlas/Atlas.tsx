@@ -1077,7 +1077,7 @@ export function Atlas({
             >
               <div
                 className={cn(
-                  "font-serif leading-none text-ink tabular",
+                  "font-heading leading-none text-ink tabular",
                   full ? "text-3xl" : "text-lg",
                 )}
               >

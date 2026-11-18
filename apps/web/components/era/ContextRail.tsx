@@ -210,7 +210,7 @@ export function InThisPart({
         ) : null
       }
     >
-      <p className="-mt-2 mb-3 font-serif text-lg leading-snug text-ink" aria-live="polite">
+      <p className="-mt-2 mb-3 font-heading text-lg leading-snug text-ink" aria-live="polite">
         {title}
       </p>
       {pictures.length > 0 && (
