@@ -1,0 +1,25 @@
+# Pramana (pramana.vootlachaitanya.com): separate app on web-2, /opt/pramana
+# (docker compose -p pramana). deploy/deploy.sh copies this file and static/ into
+# movie-browser-caddy's caddy_data volume (/data/sites/), which the movie-browser
+# Caddyfile pulls in with "import /data/sites/*.caddy". Sign-in is in the app.
+pramana.vootlachaitanya.com {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+	# Plain pages that need no app build (Google's consent screen links them).
+	@static path /privacy /terms
+	handle @static {
+		root * /data/sites/pramana-static
+		rewrite * {path}.html
+		file_server
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3700 {
+			flush_interval -1
+		}
+	}
+}

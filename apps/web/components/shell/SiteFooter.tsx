@@ -94,7 +94,14 @@ export function SiteFooter({ claims, sources, pending }: { claims: number; sourc
           ; content under CC BY-SA 4.0. Quoted sources keep their own licences.
         </p>
         <p>
-          Made by{" "}
+          <a href="/privacy" className="text-ink-2 underline decoration-rule underline-offset-2 hover:text-ink">
+            Privacy
+          </a>
+          {", "}
+          <a href="/terms" className="text-ink-2 underline decoration-rule underline-offset-2 hover:text-ink">
+            terms
+          </a>
+          . Made by{" "}
           <a
             href="https://vootlachaitanya.com"
             rel="author"
