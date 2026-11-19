@@ -149,7 +149,8 @@ async function approvePending(ctx: ActorContext): Promise<string[]> {
   }
 }
 
-const STEP_TIMEOUT_MS = 10 * 60 * 1000;
+// Longer through a tunnel to a remote database (deploy/content.sh sets it).
+const STEP_TIMEOUT_MS = Number(process.env.PRAMANA_STEP_TIMEOUT_MS) || 10 * 60 * 1000;
 
 function run(step: { name: string; args: string[] }): boolean {
   console.log(`\n=== ${step.name}`);

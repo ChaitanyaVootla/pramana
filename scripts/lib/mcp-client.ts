@@ -22,7 +22,9 @@ export async function connectMcp(clientName = "pramana-script") {
   await client.connect(transport);
 
   async function call<T = unknown>(name: string, args: Record<string, unknown> = {}): Promise<T> {
-    const result = await client.callTool({ name, arguments: args });
+    // A large changeset's dry run against a remote database (deploy/content.sh) outlasts the SDK's 60 s default.
+    const timeout = Number(process.env.PRAMANA_MCP_TIMEOUT_MS) || undefined;
+    const result = await client.callTool({ name, arguments: args }, undefined, timeout ? { timeout } : undefined);
     const content = result.content as { type: string; text: string }[];
     const body = content.map((c) => c.text).join("\n");
     if (result.isError) throw new Error(`${name}: ${body}`);

@@ -42,5 +42,7 @@ trap 'kill $tunnel 2>/dev/null || true' EXIT
 for _ in $(seq 1 20); do (echo >"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null && break; sleep 0.5; done
 
 echo "== pipeline ${args[*]:-(every step)}"
+# Every query crosses the tunnel, so a large changeset's dry run takes minutes, not seconds.
 DATABASE_URL="postgres://pramana:$pw@127.0.0.1:$PORT/pramana" PRAMANA_DATA_DIR="$DATA" \
+  PRAMANA_MCP_TIMEOUT_MS=3600000 PRAMANA_STEP_TIMEOUT_MS=7200000 \
   node node_modules/tsx/dist/cli.mjs scripts/main/pipeline.ts "${args[@]}"
