@@ -78,6 +78,12 @@ const STEPS: { name: string; args: string[] }[] = [
   { name: "learn-index", args: ["scripts/seed/learn-index.ts"] },
   { name: "copyedit-briefs", args: ["scripts/seed/copyedit-briefs.ts"] },
   { name: "retire-duplicate-excerpts", args: ["scripts/seed/retire-duplicate-excerpts.ts"] },
+  // Drought, famine and everyday life: three period pages, then the page across the ages built from their cells.
+  { name: "famine-early", args: ["scripts/seed/famine-early-index.ts"] },
+  { name: "famine-medieval", args: ["scripts/seed/famine-medieval-index.ts"] },
+  { name: "famine-british", args: ["scripts/seed/famine-british-index.ts"] },
+  { name: "famine-british-media", args: ["scripts/seed/famine-british-media.ts"] },
+  { name: "famine-across-ages", args: ["scripts/seed/famine-across-ages.ts"] },
 ];
 
 async function ensureDelegation(ctx: ActorContext): Promise<void> {
@@ -147,7 +153,9 @@ const STEP_TIMEOUT_MS = 10 * 60 * 1000;
 
 function run(step: { name: string; args: string[] }): boolean {
   console.log(`\n=== ${step.name}`);
-  const r = spawnSync(join(root, "node_modules", ".bin", "tsx"), step.args, {
+  // tsx's entry point through node, not node_modules/.bin/tsx (a shell script Windows cannot spawn).
+  const tsx = join(root, "node_modules", "tsx", "dist", "cli.mjs");
+  const r = spawnSync(process.execPath, [tsx, ...step.args], {
     cwd: root,
     env: process.env,
     encoding: "utf8",
