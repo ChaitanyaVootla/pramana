@@ -8,6 +8,7 @@ import {
   encodeSession,
   identityFor,
   safeNext,
+  safePicture,
 } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,7 @@ interface IdClaims {
   email_verified?: boolean;
   name?: string;
   given_name?: string;
+  picture?: string;
 }
 
 /**
@@ -78,7 +80,8 @@ export async function GET(req: NextRequest) {
 
   const who = identityFor(claims, config);
   await ensureActor(who.handle, "human", who.name);
-  const session = encodeSession({ h: who.handle, n: who.name }, config.secret);
+  const picture = safePicture(claims.picture);
+  const session = encodeSession({ h: who.handle, n: who.name, ...(picture ? { p: picture } : {}) }, config.secret);
   const res = NextResponse.redirect(`${config.origin}${safeNext(saved.next)}`);
   res.cookies.set(SESSION_COOKIE, session.value, {
     httpOnly: true,

@@ -59,6 +59,8 @@ export interface Session {
   h: string;
   /** Display name. */
   n: string;
+  /** Google profile picture (kept in the cookie only, never stored). */
+  p?: string;
   /** Expiry, seconds since the epoch. */
   exp: number;
 }
@@ -148,14 +150,30 @@ export async function resolveHuman(): Promise<ActorContext> {
 }
 
 export type Account =
-  { mode: "local" } | { mode: "guest" } | { mode: "signed-in"; name: string; owner: boolean };
+  { mode: "local" } | { mode: "guest" } | { mode: "signed-in"; name: string; owner: boolean; picture: string | null };
 
 /** What the shell shows about the person: nothing locally, a sign-in link, or their name. */
 export async function currentAccount(): Promise<Account> {
   if (!authEnabled()) return { mode: "local" };
   const session = await currentSession();
   if (!session) return { mode: "guest" };
-  return { mode: "signed-in", name: session.n, owner: session.h === authConfig().ownerHandle };
+  return {
+    mode: "signed-in",
+    name: session.n,
+    owner: session.h === authConfig().ownerHandle,
+    picture: safePicture(session.p),
+  };
+}
+
+/** A Google profile picture URL, or null for anything else (only Google's image host is shown). */
+export function safePicture(url: unknown): string | null {
+  if (typeof url !== "string" || url.length > 1000) return null;
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" && u.hostname.endsWith(".googleusercontent.com") ? u.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 /** A same-site path to return to after signing in; anything else goes home. */

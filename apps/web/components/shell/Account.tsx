@@ -2,6 +2,7 @@
 
 import { LogIn, LogOut } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Account as AccountState } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -41,11 +42,11 @@ export function Account({ account, className }: { account: AccountState; classNa
       <PopoverTrigger
         aria-label={`Signed in as ${account.name}`}
         className={cn(
-          "inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-white font-display text-[1.05rem] leading-none text-slab transition-colors hover:bg-white/90",
+          "inline-flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white font-display text-[1.05rem] leading-none text-slab ring-2 ring-white/25 transition hover:ring-white/60",
           className,
         )}
       >
-        {initial}
+        <Avatar picture={account.picture} initial={initial} />
       </PopoverTrigger>
       <PopoverContent
         align="end"
@@ -71,6 +72,24 @@ export function Account({ account, className }: { account: AccountState; classNa
         </form>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** The Google picture, or the initial if there is none or it fails to load. */
+function Avatar({ picture, initial }: { picture: string | null; initial: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!picture || failed) return <>{initial}</>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- a small remote avatar; no image optimisation needed
+    <img
+      src={picture}
+      alt=""
+      width={36}
+      height={36}
+      referrerPolicy="no-referrer"
+      className="size-full object-cover"
+      onError={() => setFailed(true)}
+    />
   );
 }
 
