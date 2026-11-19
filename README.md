@@ -14,7 +14,7 @@ The content is structured, not just prose:
 
 Every change is proposed, dry-run, reviewed by a person and then applied, with an append-only audit trail. AI agents work on the platform over [MCP](https://modelcontextprotocol.io), and they can only propose changes. A person approves them.
 
-> **Status: MVP, single user, local only.** There is no authentication. Do not expose the web app or the MCP server beyond `localhost`.
+> **Status: MVP.** Live at <https://pramana.vootlachaitanya.com>. Run locally, it is single-user with no sign-in, so keep it on `localhost`. To host it for others, turn on Google sign-in (`PRAMANA_AUTH=google`, see `.env.example`): anyone can read, signed-in learners keep their own notes and cards, and only the owner approves changes. The MCP server is always localhost-only.
 
 ## What is here
 
