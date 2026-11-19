@@ -30,6 +30,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SEAL_NOT_TRUTH } from "@/lib/labels";
 import { cn } from "@/lib/utils";
+import { SignInPrompt } from "@/components/shell/Account";
+import { currentAccount } from "@/lib/auth";
 
 export const metadata = { title: "Learn" };
 
@@ -254,6 +256,8 @@ export default async function LearnPage({
 }: {
   searchParams: Promise<{ "first-steps"?: string; era?: string }>;
 }) {
+  if ((await currentAccount()).mode === "guest")
+    return <SignInPrompt title="Learn with your own review cards" />;
   const ctx = await humanContext();
   const params = await searchParams;
   // In development, /learn?first-steps shows the first steps to any learner, for checking the component.

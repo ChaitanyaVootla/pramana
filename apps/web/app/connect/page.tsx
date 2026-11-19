@@ -26,7 +26,10 @@ export default async function ConnectPage() {
       <PageContainer narrow>
         <PageTitle>Connect your AI</PageTitle>
         <Lede>
-          Open this page at http://127.0.0.1 on the computer running Pramāṇa to see how to connect.
+          Your AI connects to a copy of Pramāṇa running on your own computer, never to a site on the
+          web. Run one from{" "}
+          <a href="https://github.com/ChaitanyaVootla/pramana">the code on GitHub</a>, then open
+          this page at http://127.0.0.1 there to see how to connect.
         </Lede>
       </PageContainer>
     );

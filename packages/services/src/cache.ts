@@ -25,7 +25,7 @@ const MAX_AGE_MS = 5 * 60_000;
 const MAX_ENTRIES = 500;
 
 /** Event kinds (the action's first word) that record a learner's own activity, not content. */
-const LEARNER_EVENTS = ["card", "cards", "guess", "check", "belief", "chapter", "first_steps", "note", "canvas", "view"];
+export const LEARNER_EVENTS = ["card", "cards", "guess", "check", "belief", "chapter", "first_steps", "note", "canvas", "view"];
 
 let last: { total: number; content: number } | null = null;
 

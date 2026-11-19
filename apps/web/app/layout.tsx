@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Anek_Devanagari, Anek_Latin, Noto_Sans_Brahmi, Tiro_Devanagari_Sanskrit } from "next/font/google";
 import { getPresence, getStats, getUserView, humanContext } from "@pramana/services";
+import { currentAccount } from "@/lib/auth";
 import { BottomNav } from "@/components/shell/BottomNav";
 import { Providers } from "@/components/shell/Providers";
 import { ThemeColor } from "@/components/shell/ThemeColor";
@@ -50,6 +51,16 @@ export const metadata: Metadata = {
   title: { default: "Pramāṇa", template: "%s · Pramāṇa" },
   description: "Indian history, with the evidence attached.",
   applicationName: "Pramāṇa",
+  ...(process.env.PRAMANA_WEB_URL?.startsWith("https://") ? { metadataBase: new URL(process.env.PRAMANA_WEB_URL) } : {}),
+  authors: [{ name: "Vootla Chaitanya", url: "https://vootlachaitanya.com" }],
+  creator: "Vootla Chaitanya",
+  openGraph: {
+    type: "website",
+    siteName: "Pramāṇa",
+    title: "Pramāṇa: Indian history, with the evidence attached",
+    description:
+      "Every statement points to the exact words it rests on, in a source you can open. Where historians disagree, you see each reading.",
+  },
   appleWebApp: { capable: true, title: "Pramāṇa", statusBarStyle: "default" },
 };
 
@@ -68,13 +79,14 @@ export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const human = humanContext();
-  const [stats, jar, presence, siteView] = await Promise.all([
+  const [stats, jar, presence, siteView, account] = await Promise.all([
     getStats(),
     cookies(),
     // This learner's own AI sessions, for the presence glyph (docs/visual.md §7); absent, the glyph is dotted.
     human.then((h) => getPresence(h.actorId)).catch(() => ({ connected: false })),
     // The learner's site-wide view holds the appearance panel's choices (docs/visual.md §4).
     human.then((h) => getUserView(h, "site", "site")).catch(() => null),
+    currentAccount(),
   ]);
   // Text size, line width and evidence density: from the learner's view, else as last set on this device.
   const appearance = siteView?.view.appearance ?? parseAppearance(jar.get(APPEARANCE_COOKIE)?.value);
@@ -89,7 +101,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="flex min-h-dvh flex-col">
         <Providers>
           <ThemeColor />
-          <TopBar pending={stats.pendingChangesets} themeSwitch={<Appearance initial={appearance} stored={Boolean(siteView?.view.appearance)} version={siteView?.version ?? 0} />} connected={presence.connected} />
+          <TopBar pending={stats.pendingChangesets} themeSwitch={<Appearance initial={appearance} stored={Boolean(siteView?.view.appearance)} version={siteView?.version ?? 0} />} connected={presence.connected} account={account} />
           <main id="main" className="flex-1">
             {children}
           </main>

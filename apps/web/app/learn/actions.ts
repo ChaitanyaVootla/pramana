@@ -4,6 +4,7 @@ import { BeliefInput, ChapterReadInput, CheckAnswerInput, FirstStepInput, GuessI
 import * as svc from "@pramana/services";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { writerContext } from "@/lib/auth";
 
 /**
  * Server actions for answers on pages ("Guess first", end-of-chapter checks,
@@ -30,12 +31,12 @@ export async function pageLearningAction(pageId: string) {
 }
 
 export async function recordGuessAction(input: GuessInput) {
-  return attempt(async () => svc.recordGuess(await svc.humanContext(), GuessInput.parse(input)));
+  return attempt(async () => svc.recordGuess(await writerContext(), GuessInput.parse(input)));
 }
 
 export async function recordCheckAnswerAction(input: CheckAnswerInput) {
   return attempt(async () => {
-    const r = await svc.recordCheckAnswer(await svc.humanContext(), CheckAnswerInput.parse(input));
+    const r = await svc.recordCheckAnswer(await writerContext(), CheckAnswerInput.parse(input));
     if (r.review) revalidatePath("/learn");
     return r;
   });
@@ -43,7 +44,7 @@ export async function recordCheckAnswerAction(input: CheckAnswerInput) {
 
 export async function addCheckToDeckAction(pageId: string, blockId: string) {
   return attempt(async () => {
-    const r = await svc.addCheckToDeck(await svc.humanContext(), Id.parse(pageId), BlockRef.parse(blockId));
+    const r = await svc.addCheckToDeck(await writerContext(), Id.parse(pageId), BlockRef.parse(blockId));
     revalidatePath("/learn");
     return r;
   });
@@ -51,27 +52,27 @@ export async function addCheckToDeckAction(pageId: string, blockId: string) {
 
 export async function recordBeliefAction(input: BeliefInput) {
   return attempt(async () => {
-    const r = await svc.recordBelief(await svc.humanContext(), BeliefInput.parse(input));
+    const r = await svc.recordBelief(await writerContext(), BeliefInput.parse(input));
     if (r.addedToDeck) revalidatePath("/learn");
     return r;
   });
 }
 
 export async function recordFirstStepAction(input: FirstStepInput) {
-  return attempt(async () => svc.recordFirstStep(await svc.humanContext(), FirstStepInput.parse(input)));
+  return attempt(async () => svc.recordFirstStep(await writerContext(), FirstStepInput.parse(input)));
 }
 
 export async function markChapterReadAction(input: ChapterReadInput) {
-  return attempt(async () => svc.markChapterRead(await svc.humanContext(), ChapterReadInput.parse(input)));
+  return attempt(async () => svc.markChapterRead(await writerContext(), ChapterReadInput.parse(input)));
 }
 
 export async function skipGuessAction(input: GuessSkipInput) {
-  return attempt(async () => svc.skipGuess(await svc.humanContext(), GuessSkipInput.parse(input)));
+  return attempt(async () => svc.skipGuess(await writerContext(), GuessSkipInput.parse(input)));
 }
 
 export async function addChapterToDeckAction(pageId: string, chapterId: string) {
   return attempt(async () => {
-    const r = await svc.addChapterToDeck(await svc.humanContext(), Id.parse(pageId), BlockRef.parse(chapterId));
+    const r = await svc.addChapterToDeck(await writerContext(), Id.parse(pageId), BlockRef.parse(chapterId));
     revalidatePath("/learn");
     return r;
   });

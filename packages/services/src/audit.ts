@@ -1,7 +1,14 @@
 import { uuidv7 } from "@pramana/core";
 import { actors, events, getDb, type DbOrTx } from "@pramana/db";
 import { and, desc, eq, isNull, lt, notInArray, or, sql, type SQL } from "drizzle-orm";
-import type { ActorContext } from "./context";
+import { LEARNER_EVENTS } from "./cache";
+import {
+  PermissionError,
+  SignInRequired,
+  canEditContent,
+  isGuest,
+  type ActorContext,
+} from "./context";
 
 export interface EventInput {
   action: string;
@@ -17,6 +24,7 @@ export async function recordEvent(
   ctx: ActorContext,
   input: EventInput,
 ): Promise<string> {
+  assertMayRecord(ctx, input.action);
   const id = uuidv7();
   await db.insert(events).values({
     id,
@@ -31,6 +39,22 @@ export async function recordEvent(
     data: input.data ?? {},
   });
   return id;
+}
+
+/**
+ * Every write through the services records an event, so this is where a hosted
+ * site's roles hold: a guest keeps nothing, and a signed-in learner keeps only
+ * their own learning (the learner events), never a change to content.
+ */
+export function assertMayRecord(ctx: ActorContext, action: string): void {
+  const learnerEvent = LEARNER_EVENTS.includes(action.split(".")[0]!);
+  if (isGuest(ctx))
+    throw new SignInRequired(learnerEvent ? "Keeping your progress" : "Changing the record");
+  if (!canEditContent(ctx) && !learnerEvent) {
+    throw new PermissionError(
+      "Only the site's editor can change the record; your own learning is yours to keep.",
+    );
+  }
 }
 
 export interface AuditEntry {

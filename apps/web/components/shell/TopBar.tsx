@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Frame } from "./Frame";
 import { NavLinks } from "./NavLinks";
 import { AiPresence } from "@/components/ai/AiPresence";
+import type { Account as AccountState } from "@/lib/auth";
+import { Account } from "./Account";
 import { SearchCommand } from "./SearchCommand";
 
 /**
@@ -14,8 +16,11 @@ export function TopBar({
   pending,
   themeSwitch,
   connected = false,
+  account = { mode: "local" },
 }: {
   pending: number;
+  /** Who is reading, on a hosted site (sign-in link or their initial); nothing locally. */
+  account?: AccountState;
   themeSwitch?: React.ReactNode;
   /** Whether an AI session is connected over MCP (see docs/visual.md §7). */
   connected?: boolean;
@@ -35,22 +40,24 @@ export function TopBar({
         <NavLinks />
         <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-1.5">
           {/* The learner is also the only reviewer: a quiet link with a count, not a banner. */}
-          {pending > 0 && (
-            <Link
-              href="/review"
-              className="hidden h-8 shrink-0 items-center gap-2 rounded-full px-3 font-sans text-ui text-ink-2 no-underline transition-colors hover:bg-rule-soft hover:text-ink xl:inline-flex"
-              title={`${pending} ${pending === 1 ? "proposal" : "proposals"} waiting for you`}
-            >
-              <span className="size-2 rounded-full bg-turmeric" aria-hidden />
-              <span>
-                <span className="tnum">{pending}</span> to review
-              </span>
-            </Link>
-          )}
+          {pending > 0 &&
+            (account.mode === "local" || (account.mode === "signed-in" && account.owner)) && (
+              <Link
+                href="/review"
+                className="hidden h-8 shrink-0 items-center gap-2 rounded-full px-3 font-sans text-ui text-ink-2 no-underline transition-colors hover:bg-rule-soft hover:text-ink xl:inline-flex"
+                title={`${pending} ${pending === 1 ? "proposal" : "proposals"} waiting for you`}
+              >
+                <span className="size-2 rounded-full bg-turmeric" aria-hidden />
+                <span>
+                  <span className="tnum">{pending}</span> to review
+                </span>
+              </Link>
+            )}
           <SearchCommand />
           {/* The study partner: opens its popover (on phones too). */}
           <AiPresence initialConnected={connected} />
           {themeSwitch}
+          <Account account={account} className="ml-1" />
         </div>
       </Frame>
     </header>

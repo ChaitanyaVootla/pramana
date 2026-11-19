@@ -3,6 +3,8 @@ import Link from "next/link";
 import { NewCanvas } from "@/components/canvas/NewCanvas";
 import { Frame } from "@/components/shell/Frame";
 import { KIND_WORDS } from "@/components/canvas/types";
+import { SignInPrompt } from "@/components/shell/Account";
+import { currentAccount } from "@/lib/auth";
 
 export const metadata = { title: "Your canvases" };
 export const dynamic = "force-dynamic";
@@ -29,6 +31,7 @@ function holds(kinds: Partial<Record<string, number>>): string {
 }
 
 export default async function CanvasesPage() {
+  if ((await currentAccount()).mode === "guest") return <SignInPrompt title="Your canvases" />;
   const canvases = await listCanvases(await humanContext());
   return (
     <Frame className="pt-8 pb-16 sm:pt-12">

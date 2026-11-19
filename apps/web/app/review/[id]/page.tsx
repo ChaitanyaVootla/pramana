@@ -1,7 +1,9 @@
 import { EntityKind, type ChangeOp } from "@pramana/core";
 import {
+  canEditContent,
   getChangeset,
   getPageView,
+  humanContext,
   listEntities,
   listEvents,
   NotFoundError,
@@ -118,6 +120,7 @@ function Rationale({ text }: { text: string }) {
 }
 
 export default async function ReviewDetail({ params }: Params) {
+  const editor = canEditContent(await humanContext());
   const { id } = await params;
   const cs = await load(id);
   const deps = await Promise.all(cs.dependsOn.map((d) => getChangeset(d).catch(() => null)));
@@ -403,7 +406,11 @@ export default async function ReviewDetail({ params }: Params) {
                 </dl>
               )}
             </RailBlock>
-            {cs.status === "proposed" ? (
+            {cs.status === "proposed" && !editor ? (
+              <RailBlock title="Decision">
+                <p className="text-sm text-ink-3">Waiting for the site's editor to read it.</p>
+              </RailBlock>
+            ) : cs.status === "proposed" ? (
               <RailBlock title="Your decision" className="scroll-mt-20" id="decision">
                 <p className="mb-3 text-sm text-ink-3">
                   Nothing appears on the site until you approve it.

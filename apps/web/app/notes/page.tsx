@@ -21,6 +21,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { NotesHistory } from "./NotesHistory";
+import { SignInPrompt } from "@/components/shell/Account";
+import { currentAccount } from "@/lib/auth";
 
 export const metadata = { title: "Notes from your AI" };
 export const dynamic = "force-dynamic";
@@ -51,6 +53,7 @@ export default async function NotesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  if ((await currentAccount()).mode === "guest") return <SignInPrompt title="Your notes" />;
   const q = Query.parse(await searchParams);
   const show = q.show ?? "shown";
   const human = await humanContext();

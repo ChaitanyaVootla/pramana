@@ -1,5 +1,5 @@
 # Runs on the Hetzner box in /opt/pramana. Caddy (movie-browser stack) proxies
-# pramana.vootlachaitanya.com to 127.0.0.1:3700 behind basic auth.
+# pramana.vootlachaitanya.com to 127.0.0.1:3700. Sign-in is Google (PRAMANA_AUTH in .env).
 services:
   db:
     image: postgres:18

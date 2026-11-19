@@ -1,7 +1,8 @@
 import { QueuedReviewsInput } from "@pramana/core";
-import { humanContext, recordQueuedReviews } from "@pramana/services";
+import { recordQueuedReviews, SignInRequired } from "@pramana/services";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { writerContext } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +19,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "send JSON" }, { status: 415 });
   try {
     const input = QueuedReviewsInput.parse(await req.json());
-    const results = await recordQueuedReviews(await humanContext(), input);
+    const results = await recordQueuedReviews(await writerContext("Keeping your reviews"), input);
     return NextResponse.json({ results }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    if (error instanceof SignInRequired) return NextResponse.json({ error: error.message }, { status: 401 });
     const message = error instanceof z.ZodError ? z.prettifyError(error) : error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: message }, { status: 400 });
   }

@@ -2,6 +2,8 @@ import { dueCards, getPageView, getProgress, humanContext, newCardsLeftToday, ne
 import { redirect } from "next/navigation";
 import { TodaySession, type Step } from "@/components/learn/TodaySession";
 import { PageContainer, PageTitle } from "@/components/pages/Shell";
+import { SignInPrompt } from "@/components/shell/Account";
+import { currentAccount } from "@/lib/auth";
 
 export const metadata = { title: "Today" };
 export const dynamic = "force-dynamic";
@@ -10,6 +12,7 @@ const STEPS: Step[] = ["part", "check", "cards", "end"];
 
 /** Today's study, from one button: the next part, its check, the cards due, then a recap. */
 export default async function TodayPage({ searchParams }: { searchParams: Promise<{ part?: string; step?: string; plan?: string; n?: string }> }) {
+  if ((await currentAccount()).mode === "guest") return <SignInPrompt title="Today's session is kept for you" />;
   const ctx = await humanContext();
   const params = await searchParams;
   // The session is pinned to one part in the URL (?part=<page>/<part id>), so answering it, which moves

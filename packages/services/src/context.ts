@@ -13,10 +13,63 @@ export interface ActorContext {
   handle: string;
   onBehalfOfId: string | null;
   sessionId: string | null;
+  /**
+   * Set only on a hosted site with sign-in (see `setHumanResolver`): the owner
+   * edits content; a signed-in learner keeps only their own learning; a guest
+   * (not signed in) reads and writes nothing personal. Absent locally, where the
+   * one local user is the owner.
+   */
+  role?: "owner" | "learner" | "guest";
 }
 
 export class PermissionError extends Error {
   override name = "PermissionError";
+}
+
+/** A guest tried to keep something: the site asks them to sign in. */
+export class SignInRequired extends PermissionError {
+  override name = "SignInRequired";
+  constructor(what = "Keeping your progress") {
+    super(`${what} needs you to sign in.`);
+  }
+}
+
+/**
+ * The guest's actor id is never stored, so reads scoped to it find nothing and
+ * any personal write that slips past the checks fails its foreign key.
+ */
+export const GUEST_ACTOR_ID = "00000000-0000-7000-8000-000000000000";
+
+export function guestContext(): ActorContext {
+  return {
+    actorId: GUEST_ACTOR_ID,
+    kind: "human",
+    handle: "guest",
+    onBehalfOfId: null,
+    sessionId: null,
+    role: "guest",
+  };
+}
+
+export function isGuest(ctx: ActorContext): boolean {
+  return ctx.role === "guest";
+}
+
+/** Whether this person may change content (approve, reject, attest): the owner, or the local user. */
+export function canEditContent(ctx: ActorContext): boolean {
+  return ctx.role === undefined || ctx.role === "owner";
+}
+
+type HumanResolver = () => Promise<ActorContext>;
+const RESOLVER = Symbol.for("pramana.humanResolver");
+
+/**
+ * A hosted web app with sign-in resolves the human per request (from its
+ * session cookie) instead of the one local user in the environment. Kept on
+ * globalThis so every bundle in the server process sees the same resolver.
+ */
+export function setHumanResolver(resolver: HumanResolver | null): void {
+  (globalThis as Record<symbol, unknown>)[RESOLVER] = resolver ?? undefined;
 }
 
 /** The person whose personal data this is: the human, or the human an agent acts for. */
@@ -45,8 +98,13 @@ export async function ensureActor(
   return { id: row!.id, kind: row!.kind, handle: row!.handle };
 }
 
-/** The local human user (MVP: single user, no authentication). */
+/**
+ * The human using the app: on a hosted site with sign-in, whoever this request
+ * belongs to (a guest if no one is signed in); otherwise the one local user.
+ */
 export async function humanContext(): Promise<ActorContext> {
+  const resolver = (globalThis as Record<symbol, unknown>)[RESOLVER] as HumanResolver | undefined;
+  if (resolver) return resolver();
   const handle = requireEnv("PRAMANA_USER_HANDLE", "me");
   const name = process.env.PRAMANA_USER_NAME ?? handle;
   const human = await ensureActor(handle, "human", name);
@@ -123,4 +181,11 @@ export function requireHuman(ctx: ActorContext, what: string): void {
       `${what} requires a human reviewer (acting as ${ctx.kind} "${ctx.handle}")`,
     );
   }
+  if (isGuest(ctx)) throw new SignInRequired(what);
+}
+
+/** Approving, rejecting and connecting an AI belong to the site's editor (the local user, or the hosted owner). */
+export function requireEditor(ctx: ActorContext, what: string): void {
+  requireHuman(ctx, what);
+  if (!canEditContent(ctx)) throw new PermissionError(`${what} is for the site's editor.`);
 }

@@ -3,7 +3,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSy
 import { dirname, isAbsolute, join } from "node:path";
 import { getDb, repoRoot } from "@pramana/db";
 import { recordEvent } from "./audit";
-import { requireHuman, type ActorContext } from "./context";
+import { requireEditor, requireHuman, type ActorContext } from "./context";
 import { dataDir } from "./snapshots";
 
 /**
@@ -108,7 +108,7 @@ export function getMcpToken(): string {
 
 /** Replaces the token: every client must be given the new one. */
 export async function rotateMcpToken(ctx: ActorContext): Promise<string> {
-  requireHuman(ctx, "making a new connection token");
+  requireEditor(ctx, "making a new connection token");
   const token = newMcpToken();
   writeToken(mcpTokenPath(), token);
   await recordEvent(getDb(), ctx, { action: "mcp.token_rotated" });

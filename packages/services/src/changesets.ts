@@ -18,7 +18,7 @@ import {
   type StoredOp,
 } from "./apply";
 import { recordEvent } from "./audit";
-import { PermissionError, requireHuman, type ActorContext } from "./context";
+import { PermissionError, requireEditor, requireHuman, type ActorContext } from "./context";
 import { activeApprovalDelegation } from "./delegation";
 import { evidenceFor, type ClaimEvidenceSummary } from "./evidence";
 import { NotFoundError, ValidationError } from "./util";
@@ -247,7 +247,7 @@ export async function approveChangeset(
       );
     note = `Approved by ${ctx.handle} on the user's behalf, under the standing instruction of ${delegation.at.toISOString().slice(0, 16).replace("T", " ")} UTC (“${delegation.instruction}”).${note ? ` ${note}` : ""}`;
   } else if (!(options.allowSystem && ctx.kind === "system")) {
-    requireHuman(ctx, "approving a changeset");
+    requireEditor(ctx, "approving a changeset");
   }
   const row = await loadChangeset(id);
   if (!OPEN.includes(row.status))
@@ -331,7 +331,7 @@ export async function rejectChangeset(
   id: string,
   note: string,
 ): Promise<DecisionResult> {
-  requireHuman(ctx, "rejecting a changeset");
+  requireEditor(ctx, "rejecting a changeset");
   return closeChangeset(ctx, id, "rejected", note);
 }
 

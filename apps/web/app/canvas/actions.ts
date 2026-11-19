@@ -15,6 +15,7 @@ import {
 import * as svc from "@pramana/services";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { writerContext } from "@/lib/auth";
 
 /**
  * Canvas and "your view" actions, run as the local human through the
@@ -71,7 +72,7 @@ export async function canvasChoicesAction(
 
 export async function createCanvasAction(title: string, description?: string): Promise<Result<{ id: string }>> {
   return attempt(async () => {
-    const c = await svc.createCanvas(await svc.humanContext(), {
+    const c = await svc.createCanvas(await writerContext(), {
       title: Title.parse(title),
       ...(description ? { description: z.string().max(2000).parse(description) } : {}),
     });
@@ -86,7 +87,7 @@ export async function addToCanvasAction(
   content: CanvasItemContentInput,
 ): Promise<Result<{ canvasId: string; title: string }>> {
   return attempt(async () => {
-    const ctx = await svc.humanContext();
+    const ctx = await writerContext();
     const item = CanvasItemContent.parse(content);
     if ("newTitle" in target) {
       const c = await svc.createCanvas(ctx, { title: Title.parse(target.newTitle), items: [{ content: item }] });
@@ -106,7 +107,7 @@ export async function addItemsAction(
   items: { content: CanvasItemContentInput; layout?: z.input<typeof CanvasLayout> }[],
 ): Promise<Result<{ ids: string[]; version: number }>> {
   return attempt(async () =>
-    svc.addCanvasItems(await svc.humanContext(), Id.parse(canvasId), { items: items as never }),
+    svc.addCanvasItems(await writerContext(), Id.parse(canvasId), { items: items as never }),
   );
 }
 
@@ -116,14 +117,14 @@ export async function updateItemAction(
   patch: { content?: CanvasItemContentInput; layout?: z.input<typeof CanvasLayout> },
 ): Promise<Result<{ version: number }>> {
   return attempt(async () =>
-    svc.updateCanvasItem(await svc.humanContext(), Id.parse(canvasId), Id.parse(itemId), patch as never),
+    svc.updateCanvasItem(await writerContext(), Id.parse(canvasId), Id.parse(itemId), patch as never),
   );
 }
 
 /** "Use the current wording": the tile stops flagging that the claim or quote changed. */
 export async function refreshPlacedAction(canvasId: string, itemId: string): Promise<Result<{ version: number }>> {
   return attempt(async () =>
-    svc.updateCanvasItem(await svc.humanContext(), Id.parse(canvasId), Id.parse(itemId), {}, { refreshPlaced: true }),
+    svc.updateCanvasItem(await writerContext(), Id.parse(canvasId), Id.parse(itemId), {}, { refreshPlaced: true }),
   );
 }
 
@@ -133,7 +134,7 @@ export async function decideBatchAction(
   decision: { batch?: string; items?: string[]; keep: boolean },
 ): Promise<Result<{ items: number; links: number; version: number }>> {
   return attempt(async () =>
-    svc.decideCanvasBatch(await svc.humanContext(), Id.parse(canvasId), {
+    svc.decideCanvasBatch(await writerContext(), Id.parse(canvasId), {
       batch: decision.batch ? Id.parse(decision.batch) : undefined,
       items: decision.items ? z.array(Id).max(200).parse(decision.items) : undefined,
       keep: z.boolean().parse(decision.keep),
@@ -146,7 +147,7 @@ export async function addLinksAction(
   links: { from: string; to: string; relation?: string; label?: string }[],
 ): Promise<Result<{ ids: string[]; version: number }>> {
   return attempt(async () =>
-    svc.addCanvasLinks(await svc.humanContext(), Id.parse(canvasId), links.map((l) => CanvasLinkInput.parse(l))),
+    svc.addCanvasLinks(await writerContext(), Id.parse(canvasId), links.map((l) => CanvasLinkInput.parse(l))),
   );
 }
 
@@ -156,7 +157,7 @@ export async function updateLinkAction(
   patch: { relation?: string; label?: string | null },
 ): Promise<Result<{ version: number }>> {
   return attempt(async () =>
-    svc.updateCanvasLink(await svc.humanContext(), Id.parse(canvasId), Id.parse(linkId), {
+    svc.updateCanvasLink(await writerContext(), Id.parse(canvasId), Id.parse(linkId), {
       relation: patch.relation === undefined ? undefined : CanvasRelation.parse(patch.relation),
       label: patch.label === undefined ? undefined : z.string().max(80).nullable().parse(patch.label),
     }),
@@ -165,13 +166,13 @@ export async function updateLinkAction(
 
 export async function removeLinksAction(canvasId: string, ids: string[]): Promise<Result<{ version: number }>> {
   return attempt(async () =>
-    svc.removeCanvasLinks(await svc.humanContext(), Id.parse(canvasId), z.array(Id).max(100).parse(ids)),
+    svc.removeCanvasLinks(await writerContext(), Id.parse(canvasId), z.array(Id).max(100).parse(ids)),
   );
 }
 
 export async function removeItemsAction(canvasId: string, ids: string[]): Promise<Result<{ version: number }>> {
   return attempt(async () =>
-    svc.removeCanvasItems(await svc.humanContext(), Id.parse(canvasId), z.array(Id).max(200).parse(ids)),
+    svc.removeCanvasItems(await writerContext(), Id.parse(canvasId), z.array(Id).max(200).parse(ids)),
   );
 }
 
@@ -180,7 +181,7 @@ export async function arrangeAction(
   input: { layouts?: { id: string; layout: z.input<typeof CanvasLayout> }[]; tidy?: boolean },
 ): Promise<Result<{ moved: number; version: number }>> {
   return attempt(async () =>
-    svc.arrangeCanvas(await svc.humanContext(), Id.parse(canvasId), input as never),
+    svc.arrangeCanvas(await writerContext(), Id.parse(canvasId), input as never),
   );
 }
 
@@ -189,7 +190,7 @@ export async function renameCanvasAction(
   fields: { title?: string; description?: string | null },
 ): Promise<Result<{ version: number }>> {
   return attempt(async () => {
-    const c = await svc.updateCanvas(await svc.humanContext(), Id.parse(canvasId), {
+    const c = await svc.updateCanvas(await writerContext(), Id.parse(canvasId), {
       title: fields.title === undefined ? undefined : Title.parse(fields.title),
       description: fields.description === undefined ? undefined : z.string().max(2000).nullable().parse(fields.description),
     });
@@ -200,7 +201,7 @@ export async function renameCanvasAction(
 
 export async function deleteCanvasAction(canvasId: string): Promise<Result> {
   return attempt(async () => {
-    await svc.deleteCanvas(await svc.humanContext(), Id.parse(canvasId));
+    await svc.deleteCanvas(await writerContext(), Id.parse(canvasId));
     revalidatePath("/canvas");
     return undefined;
   });
@@ -219,34 +220,34 @@ export async function setViewAction(
 ): Promise<Result<svc.UserViewState>> {
   return attempt(async () => {
     const s = Subject.parse(subject);
-    return svc.setUserView(await svc.humanContext(), s.type, s.id, UserViewPatch.parse(patch));
+    return svc.setUserView(await writerContext(), s.type, s.id, UserViewPatch.parse(patch));
   });
 }
 
 export async function resetViewAction(subject: SubjectInput): Promise<Result<svc.UserViewState>> {
   return attempt(async () => {
     const s = Subject.parse(subject);
-    return svc.resetUserView(await svc.humanContext(), s.type, s.id);
+    return svc.resetUserView(await writerContext(), s.type, s.id);
   });
 }
 
 export async function undoViewAction(subject: SubjectInput): Promise<Result<svc.UserViewState>> {
   return attempt(async () => {
     const s = Subject.parse(subject);
-    return svc.undoUserView(await svc.humanContext(), s.type, s.id);
+    return svc.undoUserView(await writerContext(), s.type, s.id);
   });
 }
 
 export async function keepViewAction(subject: SubjectInput): Promise<Result<svc.UserViewState>> {
   return attempt(async () => {
     const s = Subject.parse(subject);
-    return svc.keepUserViewChange(await svc.humanContext(), s.type, s.id);
+    return svc.keepUserViewChange(await writerContext(), s.type, s.id);
   });
 }
 
 /** The appearance panel's choices (text size, line width, evidence density, theme), kept in the learner's site-wide view. */
 export async function setAppearanceAction(appearance: AppearanceInput): Promise<Result<svc.UserViewState>> {
   return attempt(async () =>
-    svc.setUserView(await svc.humanContext(), "site", SITE_VIEW_ID, { appearance: Appearance.parse(appearance) }),
+    svc.setUserView(await writerContext(), "site", SITE_VIEW_ID, { appearance: Appearance.parse(appearance) }),
   );
 }

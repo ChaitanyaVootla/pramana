@@ -2,6 +2,8 @@ import { getCanvas, humanContext, NotFoundError } from "@pramana/services";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CanvasBoard } from "@/components/canvas/CanvasBoard";
+import { SignInPrompt } from "@/components/shell/Account";
+import { currentAccount } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function CanvasRoute({ params }: Params) {
+  if ((await currentAccount()).mode === "guest") return <SignInPrompt title="Your canvases" />;
   const { id } = await params;
   // The board takes the whole width under the top bar: no frame, no sidebar, and no footer (globals.css hides
   // it from the first paint for this route, so nothing shifts when a phone switches to the list).

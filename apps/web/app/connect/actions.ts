@@ -4,13 +4,14 @@ import * as svc from "@pramana/services";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/app/actions";
+import { writerContext } from "@/lib/auth";
 
 /** Makes a new MCP token. Clients still using the old one are refused from now on. */
 export async function rotateTokenAction(): Promise<ActionResult> {
   try {
     const local = svc.checkLocalRequest(await headers());
     if (!local.ok) return { ok: false, error: local.reason };
-    await svc.rotateMcpToken(await svc.humanContext());
+    await svc.rotateMcpToken(await writerContext());
     revalidatePath("/connect");
     return { ok: true, message: "New key made. Set up your AI again: for Claude Desktop, download the extension and install it again." };
   } catch (error) {

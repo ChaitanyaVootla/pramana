@@ -4,6 +4,7 @@ import { ReviewInput, SupportVerdict } from "@pramana/core";
 import { z } from "zod";
 import * as svc from "@pramana/services";
 import { revalidatePath } from "next/cache";
+import { writerContext } from "@/lib/auth";
 
 /**
  * Server actions run as the local human user. Every one goes through the
@@ -36,7 +37,7 @@ export async function approveChangesetAction(
   withDependencies: boolean,
 ): Promise<ActionResult> {
   return attempt(async () => {
-    const ctx = await svc.humanContext();
+    const ctx = await writerContext();
     const result = await svc.approveChangeset(ctx, Id.parse(id), {
       note: Note.parse(note) || undefined,
       withDependencies: z.boolean().parse(withDependencies),
@@ -52,7 +53,7 @@ export async function approveChangesetAction(
 export async function rejectChangesetAction(id: string, note: string): Promise<ActionResult> {
   return attempt(async () => {
     if (!Note.parse(note).trim()) throw new Error("Say why, so the author can fix it.");
-    await svc.rejectChangeset(await svc.humanContext(), Id.parse(id), note);
+    await svc.rejectChangeset(await writerContext(), Id.parse(id), note);
     revalidatePath("/", "layout");
     return "Rejected.";
   });
@@ -61,7 +62,7 @@ export async function rejectChangesetAction(id: string, note: string): Promise<A
 export async function addToDeckAction(claimIds: string[]): Promise<ActionResult> {
   return attempt(async () => {
     const { added } = await svc.addCards(
-      await svc.humanContext(),
+      await writerContext(),
       z.array(Id).max(500).parse(claimIds),
     );
     revalidatePath("/learn");
@@ -71,7 +72,7 @@ export async function addToDeckAction(claimIds: string[]): Promise<ActionResult>
 
 export async function addPageToDeckAction(pageId: string): Promise<ActionResult> {
   return attempt(async () => {
-    const { added } = await svc.addPageToDeck(await svc.humanContext(), Id.parse(pageId));
+    const { added } = await svc.addPageToDeck(await writerContext(), Id.parse(pageId));
     revalidatePath("/learn");
     return added
       ? `Added ${added} claims to your reviews.`
@@ -81,18 +82,21 @@ export async function addPageToDeckAction(pageId: string): Promise<ActionResult>
 
 export async function recordReviewAction(input: ReviewInput): Promise<ActionResult> {
   return attempt(async () => {
-    const result = await svc.recordReview(await svc.humanContext(), ReviewInput.parse(input));
+    const result = await svc.recordReview(await writerContext(), ReviewInput.parse(input));
     return `Next review ${result.nextDue.toISOString()}`;
   });
 }
 
 export async function markVisitedAction(pageId: string): Promise<void> {
-  await svc.recordPageVisit(await svc.humanContext(), Id.parse(pageId));
+  const ctx = await svc.humanContext();
+  // A guest's visits are not kept (they have no history to keep them in).
+  if (svc.isGuest(ctx)) return;
+  await svc.recordPageVisit(ctx, Id.parse(pageId));
 }
 
 export async function archiveNoteAction(id: string): Promise<ActionResult> {
   return attempt(async () => {
-    await svc.archiveNote(await svc.humanContext(), Id.parse(id));
+    await svc.archiveNote(await writerContext(), Id.parse(id));
   });
 }
 
@@ -103,7 +107,7 @@ export async function attestExcerptAction(
 ): Promise<ActionResult> {
   return attempt(async () => {
     if (!Note.parse(note).trim()) throw new Error("Say what you checked it against.");
-    await svc.attestExcerpt(await svc.humanContext(), Id.parse(excerptId), note);
+    await svc.attestExcerpt(await writerContext(), Id.parse(excerptId), note);
     revalidatePath(Path.parse(path));
     return "Marked as checked by you.";
   });
@@ -118,7 +122,7 @@ export async function judgeSupportAction(
   return attempt(async () => {
     const v = SupportVerdict.parse(verdict);
     await svc.recordSupportCheck(
-      await svc.humanContext(),
+      await writerContext(),
       Id.parse(citationId),
       v,
       Note.parse(note) || "Reviewed in the web UI",
@@ -139,7 +143,7 @@ export async function judgeSupportAction(
  */
 export async function stopAutoApprovalAction(note: string): Promise<ActionResult> {
   return attempt(async () => {
-    const ctx = await svc.humanContext();
+    const ctx = await writerContext();
     if (ctx.kind !== "human") throw new Error("Only you can stop auto-approval.");
     await svc.revokeApprovalDelegation(ctx, Note.parse(note) || undefined);
     revalidatePath("/review");

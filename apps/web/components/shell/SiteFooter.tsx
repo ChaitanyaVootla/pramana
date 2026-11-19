@@ -82,8 +82,27 @@ export function SiteFooter({ claims, sources, pending }: { claims: number; sourc
           </nav>
         ))}
       </Frame>
-      <Frame className="border-t border-rule py-4 text-sm text-ink-3">
-        Code under AGPL-3.0, content under CC BY-SA 4.0. Quoted sources keep their own licences.
+      <Frame className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 border-t border-rule py-4 text-sm text-ink-3">
+        <p>
+          Code under AGPL-3.0, on{" "}
+          <a
+            href="https://github.com/ChaitanyaVootla/pramana"
+            className="text-ink-2 underline decoration-rule underline-offset-2 hover:text-ink"
+          >
+            GitHub
+          </a>
+          ; content under CC BY-SA 4.0. Quoted sources keep their own licences.
+        </p>
+        <p>
+          Made by{" "}
+          <a
+            href="https://vootlachaitanya.com"
+            rel="author"
+            className="text-ink-2 underline decoration-rule underline-offset-2 hover:text-ink"
+          >
+            Vootla Chaitanya
+          </a>
+        </p>
       </Frame>
     </footer>
   );
