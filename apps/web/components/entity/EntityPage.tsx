@@ -17,6 +17,7 @@ import { AtlasProvider, useAtlasBus } from "@/components/atlas/bus";
 import { EntityChip } from "@/components/chips/Chips";
 import { claimElement, isLocated, ReaderContext, type Reader } from "@/components/chips/reader";
 import { ClaimItem } from "@/components/era/ClaimItem";
+import { Bench } from "@/components/era/Bench";
 import { Panel, PlaceCard } from "@/components/era/ContextRail";
 import { EvidenceDrawer } from "@/components/evidence/EvidenceDrawer";
 import { Markdown } from "@/components/Markdown";
@@ -506,9 +507,11 @@ function EntityReader({ data, history, ageLine }: { data: EntityPageData; histor
 
   return (
     <ReaderContext.Provider value={reader}>
-      <Frame className={cn(ERA_GRID({ outline: false, rail: true }), "pt-6 pb-4 sm:pt-8 lg:pt-10")}>
+      {/* The bench (docs/visual.md §4) runs from the top bar to the footer, out to the window's edge. */}
+      <div className="bench-clip">
+      <Frame className={cn(ERA_GRID({ outline: false, rail: true }), "pt-6 pb-4 sm:pt-8 lg:pt-0 lg:pb-0")}>
         {/* ------------------------------------------------ who or what, when, where */}
-        <header className="era-hero min-w-0">
+        <header className="era-hero min-w-0 lg:pt-10">
           {/* The line is time (docs/visual.md §1): every age, the one this subject belongs to lit, its dates as the cursor. */}
           {ageLine && <div className="mb-5">{ageLine}</div>}
           {/* Below 400px the picture goes under the title, so the name and dates keep the full width. */}
@@ -728,7 +731,7 @@ function EntityReader({ data, history, ageLine }: { data: EntityPageData; histor
         </header>
 
         {/* ------------------------------------------------ the evidence, connections, pages */}
-        <div className="era-body min-w-0 space-y-12">
+        <div className="era-body min-w-0 space-y-12 lg:pb-4">
           <section hidden={hides("claims")} aria-labelledby="claims-h">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4">
               <h2 id="claims-h" className="text-2xl text-ink">
@@ -934,28 +937,27 @@ function EntityReader({ data, history, ageLine }: { data: EntityPageData; histor
             </Disclosure>
           </section>
         </div>
-        {/* ------------------------------------------------ the rail: atlas and context card */}
-        <aside className="era-rail hidden min-w-0 lg:block" aria-label="Map and context">
+        {/* ------------------------------------------------ the bench: atlas and context card */}
+        <Bench label="Map and context" className="lg:-mb-14 xl:-mb-20">
+          {desktop && atlas && !hides("atlas") && (
+            <div className="shrink-0">{atlasNode("rail", 260)}</div>
+          )}
           <div
-            className={cn(
-              "sticky top-[calc(var(--topbar-h)+1rem)] flex max-h-[calc(100dvh-var(--topbar-h)-2rem)] flex-col gap-3",
-            )}
+            id="era-context"
+            tabIndex={-1}
+            className="scroll-thin -ml-1 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 pb-8 pl-1 outline-none [mask-image:linear-gradient(to_bottom,black_calc(100%-1.75rem),transparent)]"
           >
-            {desktop && atlas && !hides("atlas") && (
-              <div className="shrink-0">{atlasNode("rail", 260)}</div>
-            )}
-            <div className="scroll-thin -mx-1 min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 pb-8 [mask-image:linear-gradient(to_bottom,black_calc(100%-1.75rem),transparent)]">
-              {!drawer && !picked && picturesCard}
-              <div
-                key={cardKey}
-                className="animate-in fade-in duration-200 ease-[var(--ease-out-quart)]"
-              >
-                {contextCard}
-              </div>
+            {!drawer && !picked && picturesCard}
+            <div
+              key={cardKey}
+              className="animate-in fade-in duration-200 ease-[var(--ease-out-quart)]"
+            >
+              {contextCard}
             </div>
           </div>
-        </aside>
+        </Bench>
       </Frame>
+      </div>
 
       {!desktop && (
         <Drawer

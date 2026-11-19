@@ -63,3 +63,45 @@ describe("diffBlocks moves", () => {
     expect(diffBlocks(before, after).map((c) => `${c.kind}:${"block" in c ? c.block.id : ""}`)).toEqual(["moved:b"]);
   });
 });
+
+import { entityRefsInBlock, excerptIdsInBlock } from "./blocks";
+
+describe("tracks blocks", () => {
+  const other = "01a149c7-a645-7c97-b96e-634292b7b7ca";
+  const ex = "01a149c7-a645-7c97-b96e-634292b7b7cb";
+  const tracks = (cells: unknown[]) => ({
+    id: "tracks",
+    type: "tracks",
+    facets: [
+      { key: "food", label: "What people ate" },
+      { key: "coping", label: "How people coped" },
+    ],
+    ages: [{ entity: "mughal-empire" }, { entity: "british-raj", label: "The Raj" }],
+    cells,
+  });
+
+  it("collect the claims, ages and quotations they point to", () => {
+    const b = Block.parse(
+      tracks([
+        { facet: "food", age: "mughal-empire", text: `[Millet and pulses](claim:${id}).`, excerptId: ex },
+        { facet: "coping", age: "british-raj", text: "Relief works.", claimIds: [other] },
+      ]),
+    );
+    expect(claimIdsInBlock(b).sort()).toEqual([id, other].sort());
+    expect(entityRefsInBlock(b)).toEqual(["mughal-empire", "british-raj"]);
+    expect(excerptIdsInBlock(b)).toEqual([ex]);
+  });
+
+  it("refuse cells outside the grid, and two cells in one place", () => {
+    const bad = (cells: unknown[]) => Block.safeParse(tracks(cells)).success;
+    expect(bad([{ facet: "dress", age: "mughal-empire", text: "x" }])).toBe(false);
+    expect(bad([{ facet: "food", age: "gupta-empire", text: "x" }])).toBe(false);
+    expect(
+      bad([
+        { facet: "food", age: "british-raj", text: "x" },
+        { facet: "food", age: "british-raj", text: "y" },
+      ]),
+    ).toBe(false);
+    expect(bad([])).toBe(true);
+  });
+});

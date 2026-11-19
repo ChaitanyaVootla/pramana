@@ -81,6 +81,7 @@ import { PartBody, PartBrief } from "./Part";
 import { PartMapThumb } from "./PartMapThumb";
 import { usePageLearning } from "@/components/learn/store";
 import { AskAi } from "@/components/ai/AskAi";
+import { Bench, BenchTabs, type BenchTab } from "./Bench";
 import { InThisPart, NotesPanel, Panel, PlaceCard } from "./ContextRail";
 import { AddToCanvas } from "@/components/canvas/AddToCanvas";
 import {
@@ -129,11 +130,11 @@ function usePillVisibility(
   return shown;
 }
 
-/** Map height for the rail atlas: about a third of the viewport, so the context card keeps room below it. */
+/** Map height for the bench's atlas: a good third of the viewport, with room under it for one pane. */
 function useRailMapHeight() {
-  const [h, setH] = useState(260);
+  const [h, setH] = useState(300);
   useEffect(() => {
-    const on = () => setH(Math.round(Math.min(400, Math.max(180, window.innerHeight * 0.32))));
+    const on = () => setH(Math.round(Math.min(460, Math.max(200, window.innerHeight * 0.38))));
     on();
     window.addEventListener("resize", on);
     return () => window.removeEventListener("resize", on);
@@ -142,6 +143,9 @@ function useRailMapHeight() {
 }
 
 const PLACE_KINDS = ["place", "site", "inscription", "event"];
+
+/** What the bench shows under the map: the part being read, the period's people and events, or the AI's notes. */
+type Pane = "part" | "time" | "notes";
 
 /** A picture attached to a part (a figure, or one of its places' pictures). */
 interface PartPicture {
@@ -225,10 +229,23 @@ function EraReader({
 }) {
   const { page } = view;
   const entity = page.entity;
+  // A theme page follows a subject through many ages: its span is theirs, first to last.
+  const theme = useMemo(() => {
+    if (page.kind !== "theme") return null;
+    const tracks = page.blocks.find(
+      (x): x is Extract<Block, { type: "tracks" }> => x.type === "tracks",
+    );
+    const ages = (tracks?.ages ?? []).flatMap((a) => view.entities[a.entity] ?? []);
+    const starts = ages.flatMap((e) => e.bounds?.startMin ?? []);
+    const ends = ages.flatMap((e) => e.bounds?.endMax ?? e.bounds?.startMin ?? []);
+    const span: [number, number] | null =
+      starts.length && ends.length ? [Math.min(...starts), Math.max(...ends)] : null;
+    return { ages: ages.length, span, tracksId: tracks?.id ?? null };
+  }, [page.kind, page.blocks, view.entities]);
   const within: [number, number] | null =
     entity?.bounds?.startMin != null && entity.bounds.endMax != null
       ? [entity.bounds.startMin, entity.bounds.endMax]
-      : null;
+      : (theme?.span ?? null);
 
   const bus = useAtlasBus();
   const [selected, setSelected] = useState<string | null>(null);
@@ -238,6 +255,9 @@ function EraReader({
   const [notes, setNotes] = useState(initialNotes);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [outlineOpen, setOutlineOpen] = useState(false);
+  // The bench shows one pane under the map at a time; the reader chooses which.
+  const [paneChoice, setPane] = useState<Pane | null>(null);
+  const [notesSeen, setNotesSeen] = useState(true);
   // Phones: the map is open under the orientation (docs/visual.md §3), and folds on request.
   const [mapOpen, setMapOpen] = useState(true);
   const [pending, start] = useTransition();
@@ -285,7 +305,10 @@ function EraReader({
       const known = new Set(prev.map((n) => n.id));
       const added = next.filter((n) => !known.has(n.id));
       // Notes arrive quietly where they belong (docs/visual.md §7): no toast.
-      if (added.length) setFresh(new Set(added.map((n) => n.id)));
+      if (added.length) {
+        setFresh(new Set(added.map((n) => n.id)));
+        setNotesSeen(false);
+      }
       return next;
     });
   }, [page.id]);
@@ -360,6 +383,14 @@ function EraReader({
       )
         return claimIdsInBlock(b).reduce((n, id) => n + wordCount(view.claims[id]?.text ?? ""), 0);
       if (b.type === "guess") return wordCount(b.question);
+      if (b.type === "tracks")
+        return (
+          markdownInBlock(b).reduce((n, m) => n + wordCount(m), 0) +
+          b.cells.reduce(
+            (n, c) => n + wordCount((c.excerptId && view.excerpts[c.excerptId]?.quote) || ""),
+            0,
+          )
+        );
       return markdownInBlock(b).reduce((n, m) => n + wordCount(m), 0);
     },
     [view.excerpts, view.claims],
@@ -890,7 +921,8 @@ function EraReader({
     spec.atlasIn === "rail" ||
     (spec.timelineIn === "rail" && within !== null) ||
     layout.chapters.length > 0 ||
-    (railNotes && notes.length > 0);
+    (railNotes && notes.length > 0) ||
+    total > 0;
   const outline = spec.outline;
   const pill = layout.chapters.length > 1 && (!outline || !wide);
 
@@ -913,6 +945,7 @@ function EraReader({
         writers={writers}
         rivers={rivers}
         collapsed={collapsed}
+        slim={variant === "rail"}
       />
     ) : null;
   const periodTimeline =
@@ -964,39 +997,88 @@ function EraReader({
           },
         }
       : null;
-  // Beside the summary at 1280px and up (while the part is folded), so the rail shows the others.
-  const activePictures = activeChapter
-    ? (partPictures.get(activeChapter.id) ?? []).slice(wide && !isOpen(activeChapter) ? 1 : 0)
-    : [];
+  // The bench's panes, in the rail's order (the page's, or the learner's own): this part, the period's
+  // people and events in time (pages with an atlas, whose own timeline is only the year scrubber), and
+  // the AI's notes. One shows at a time.
+  const lanes = spec.atlasIn === "rail" && within !== null && entity != null;
+  const paneTabs: BenchTab<Pane>[] = spec.rail.flatMap((p): BenchTab<Pane>[] =>
+    p === "in_this_part" && inThisPart
+      ? [
+          { id: "part", label: "This part" },
+          ...(lanes ? [{ id: "time" as const, label: "Timeline" }] : []),
+        ]
+      : p === "notes" && notes.length > 0
+        ? [{ id: "notes", label: "From your AI", count: notes.length, fresh: !notesSeen }]
+        : [],
+  );
+  if (lanes && !paneTabs.some((t) => t.id === "time"))
+    paneTabs.unshift({ id: "time", label: "Timeline" });
+  const pane = paneTabs.find((t) => t.id === paneChoice)?.id ?? paneTabs[0]?.id ?? null;
+  const paneBody =
+    pane === "part" && inThisPart ? (
+      <InThisPart
+        showMap={showPartMap}
+        index={activeIndex}
+        title={chapterTitle(activeChapter)}
+        people={activeCtx.people}
+        witnesses={activeCtx.witnesses}
+        terms={activeCtx.terms}
+        within={within}
+        ask={
+          <AskAi
+            subject={{
+              type: "chapter",
+              page: page.slug,
+              chapter: activeChapter.id,
+              label: chapterTitle(activeChapter),
+              pageTitle: page.title,
+            }}
+            label="Ask your AI about this part"
+          />
+        }
+      />
+    ) : pane === "time" && within && entity ? (
+      <div className="font-sans">
+        <PeriodTimeline
+          items={timeline}
+          focus={{
+            from: spec.timelineRange?.[0] ?? within[0],
+            to: spec.timelineRange?.[1] ?? within[1],
+            id: entity.id,
+            label: entity.label,
+          }}
+          pageByEntity={pageByEntity}
+          height={280}
+          compact
+          layers={["people", "events"]}
+          cursor={bus.year}
+          quietIds={writers}
+        />
+        <p className="mt-2 text-xs leading-5 text-ink-2">
+          Rulers are drawn by their reigns and events as dots; the line is the year on the map.{" "}
+          <Link
+            href="/timeline"
+            className="text-indigo underline decoration-indigo-tint underline-offset-3 hover:decoration-indigo"
+          >
+            The full timeline
+          </Link>
+        </p>
+      </div>
+    ) : pane === "notes" ? (
+      <NotesPanel notes={notes} fresh={fresh} onDismiss={dismissNote} bare />
+    ) : null;
   const contextCard = drawer ? (
     <div className="floating p-4">{drawer}</div>
   ) : pickedEntity ? (
     <div className="floating p-4">{placeCard(false)}</div>
-  ) : inThisPart ? (
-    <InThisPart
-      showMap={showPartMap}
-      pictures={activePictures.slice(0, 3)}
-      index={activeIndex}
-      title={chapterTitle(activeChapter)}
-      people={activeCtx.people}
-      witnesses={activeCtx.witnesses}
-      places={activeCtx.places}
-      terms={activeCtx.terms}
-      within={within}
-      ask={
-        <AskAi
-          subject={{
-            type: "chapter",
-            page: page.slug,
-            chapter: activeChapter.id,
-            label: chapterTitle(activeChapter),
-            pageTitle: page.title,
-          }}
-          label="Ask your AI about this part"
-        />
-      }
-    />
-  ) : null;
+  ) : (
+    (paneBody ??
+      (total > 0 ? (
+        <p className="font-sans text-ui text-ink-2">
+          Select a claim to see the words it rests on here.
+        </p>
+      ) : null))
+  );
 
   const heroPanels = spec.hero
     .map((p): { key: string; node: React.ReactNode } | null => {
@@ -1085,9 +1167,16 @@ function EraReader({
 
   return (
     <ReaderContext.Provider value={readerCtx}>
-      <Frame className={cn(ERA_GRID({ outline, rail: hasRail }), "pt-6 sm:pt-8 lg:pt-10")}>
+      <div className={cn(hasRail && "bench-clip")}>
+      <Frame
+        className={cn(
+          ERA_GRID({ outline, rail: hasRail }),
+          "pt-6 sm:pt-8",
+          hasRail ? "lg:pt-0" : "lg:pt-10",
+        )}
+      >
         {/* ---------------------------------------------------------- orientation */}
-        <header className="era-hero min-w-0 pb-2 lg:pb-6">
+        <header className={cn("era-hero min-w-0 pb-2 lg:pb-6", hasRail && "lg:pt-10")}>
           {layout.chapters[0] && (
             <a
               href={`#${layout.chapters[0].id}`}
@@ -1122,6 +1211,32 @@ function EraReader({
             )}
           </h1>
 
+          {theme && !entity && (theme.span || theme.ages > 0) && (
+            <div className="mt-5 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              {theme.span && (
+                <span className="font-heading text-xl text-ink tnum sm:text-2xl">
+                  {formatYear(Math.floor(theme.span[0]))} to {formatYear(Math.ceil(theme.span[1]) - 1)}
+                </span>
+              )}
+              {theme.ages > 0 && (
+                <span className="font-sans text-ui text-ink-2">
+                  one subject followed through {theme.ages} ages
+                  {theme.tracksId && (
+                    <>
+                      {", "}
+                      <a
+                        href={`#${theme.tracksId}`}
+                        onClick={(e) => jumpTo(theme.tracksId!, e)}
+                        className="text-indigo underline decoration-indigo-tint underline-offset-3 hover:decoration-indigo"
+                      >
+                        age by age
+                      </a>
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
+          )}
           <div className="mt-5 flex flex-wrap items-baseline gap-x-4 gap-y-1">
             {entity?.whenLabel && (
               <span className="font-heading text-xl text-ink tnum sm:text-2xl">
@@ -1300,10 +1415,10 @@ function EraReader({
          * request, or when the reader picks a date or "See it"), so the story is not pushed
          * a screen down by tools. Study notes go after the chapters.
          */}
-        {!desktop && (spec.atlasIn === "rail" || spec.timelineIn === "rail") && (
+        {!desktop && (spec.atlasIn === "rail" || (spec.timelineIn === "rail" && periodTimeline)) && (
           <div
             ref={atlasRef}
-            className="min-w-0 scroll-mt-[calc(var(--topbar-h)+1rem)] border-y border-rule lg:hidden"
+            className="field -mx-[max(var(--gutter),env(safe-area-inset-left))] min-w-0 scroll-mt-[calc(var(--topbar-h)+1rem)] rounded-none lg:hidden"
           >
             <button
               type="button"
@@ -1353,7 +1468,7 @@ function EraReader({
             <div
               className={cn(
                 "space-y-7",
-                layout.chapters.length > 0 && "mb-14 max-w-[66ch] border-b border-rule pb-12",
+                layout.chapters.length > 0 && "mb-16",
               )}
             >
               {introRest.map((b) =>
@@ -1367,7 +1482,7 @@ function EraReader({
                       .filter((e): e is EntityCard => Boolean(e))}
                   />
                 ) : (
-                  <div key={b.id} className="max-w-[66ch]">
+                  <div key={b.id} className={cn(b.type !== "tracks" && "max-w-[66ch]")}>
                     <BlockView block={b} view={view} selected={selected} onSelect={select} />
                   </div>
                 ),
@@ -1392,18 +1507,22 @@ function EraReader({
                 className={cn(
                   "scroll-mt-[calc(var(--topbar-h)+1.5rem)]",
                   // Phone skim reader: parts follow one another closely, each as tall as its summary.
-                  phoneSkim && chapterBrief(c)
-                    ? i > 0 && "mt-10 border-t border-rule pt-8"
-                    : i > 0 && "mt-16 border-t border-rule pt-14",
+                  i > 0 && (phoneSkim && chapterBrief(c) ? "mt-12" : "mt-20 sm:mt-24"),
                 )}
               >
-                <p className="font-sans text-ui text-ink-2 tnum">
+                {/* The line is time: a part opens on the period's line, its own years lit. */}
+                <PartLine
+                  within={within}
+                  mark={b ? stripMark(b) : null}
+                  later={c.head.type === "chapter" && c.head.phase === "later"}
+                />
+                <p className="mt-6 font-sans text-ui text-ink-2 tnum sm:mt-8">
                   Part {i + 1} of {layout.chapters.length}
                 </p>
                 <h2
                   id={`${c.id}-title`}
                   tabIndex={-1}
-                  className="mt-1.5 max-w-[30ch] scroll-mt-28 rounded-sm text-2xl text-ink outline-none"
+                  className="mt-1.5 max-w-[26ch] scroll-mt-28 rounded-sm text-2xl text-ink outline-none sm:text-3xl"
                 >
                   {chapterTitle(c)}
                 </h2>
@@ -1591,7 +1710,7 @@ function EraReader({
                         guess={guessLine}
                         picture={
                           picture && wide ? (
-                            <div className="h-[15rem]">
+                            <div className="h-[16rem]">
                               <MediaTile media={picture.media} caption={picture.caption} />
                             </div>
                           ) : null
@@ -1607,14 +1726,6 @@ function EraReader({
                               quiet
                             />
                           ) : null
-                        }
-                        onShowOnMap={
-                          spec.atlas && partYear !== null
-                            ? {
-                                year: formatYear(partYear),
-                                go: () => bus.setYear(partYear, { fromReader: true }),
-                              }
-                            : null
                         }
                         next={
                           nextPart
@@ -1683,50 +1794,48 @@ function EraReader({
           )}
         </article>
 
-        {/* ---------------------------------------------------------- the rail: atlas and context card (wide screens) */}
+        {/* ---------------------------------------------------------- the bench: the map, then one pane (wide screens) */}
         {hasRail && (
-          // After the reading in the DOM (keyboard and screen readers meet the story first); the grid places it beside.
-          <aside
-            id="era-rail"
-            className="era-rail hidden min-w-0 lg:block"
-            aria-label="Map and context"
-          >
-            <a
-              href="#era-context"
-              className="visually-hidden focus:not-sr-only focus:absolute focus:z-30 focus:rounded-md focus:bg-paper focus:px-3 focus:py-2 focus:font-sans focus:text-sm focus:shadow-pop"
+          <Bench label="Map and context" className="lg:-mb-14 xl:-mb-20">
+            {desktop && spec.atlasIn === "rail" && (
+              <div className="shrink-0">{atlas("rail", mapHeight, focusing)}</div>
+            )}
+            {spec.timelineIn === "rail" && <div className="shrink-0">{periodTimeline}</div>}
+            {!focusing && paneTabs.length > 1 && pane && (
+              <BenchTabs
+                tabs={paneTabs}
+                value={pane}
+                onChange={(id) => {
+                  setPane(id);
+                  if (id === "notes") setNotesSeen(true);
+                }}
+                label="Beside the reading"
+                panelId="era-context"
+              />
+            )}
+            <div
+              id="era-context"
+              tabIndex={-1}
+              {...(!focusing && paneTabs.length > 1 && pane
+                ? { role: "tabpanel", "aria-labelledby": `era-context-tab-${pane}` }
+                : {})}
+              className="scroll-thin -ml-1 min-h-0 flex-1 overflow-y-auto overscroll-contain pt-1 pr-1 pb-8 pl-1 outline-none [mask-image:linear-gradient(to_bottom,black_calc(100%-1.75rem),transparent)]"
             >
-              Skip the map
-            </a>
-            <div className="sticky top-[calc(var(--topbar-h)+1rem)] flex h-[calc(100dvh-var(--topbar-h)-2rem)] flex-col gap-3">
-              {desktop && spec.atlasIn === "rail" && (
-                <div className="shrink-0">{atlas("rail", mapHeight, focusing)}</div>
+              {contextCard && (
+                <div
+                  key={focusing ? cardKey : `pane:${pane}`}
+                  className="animate-in fade-in duration-200 ease-[var(--ease-out-quart)]"
+                >
+                  {contextCard}
+                </div>
               )}
-              {spec.timelineIn === "rail" && <div className="shrink-0">{periodTimeline}</div>}
-              <div
-                id="era-context"
-                tabIndex={-1}
-                className="scroll-thin -mx-1 min-h-0 flex-1 overflow-y-auto outline-none overscroll-contain px-1 pb-8 [mask-image:linear-gradient(to_bottom,black_calc(100%-1.75rem),transparent)]"
-              >
-                {contextCard && (
-                  <div
-                    key={cardKey}
-                    className="animate-in fade-in duration-200 ease-[var(--ease-out-quart)]"
-                  >
-                    {contextCard}
-                  </div>
-                )}
-                {railNotes && notes.length > 0 && (
-                  <div className={cn(contextCard && "mt-3")}>
-                    <NotesPanel notes={notes} fresh={fresh} onDismiss={dismissNote} />
-                  </div>
-                )}
-              </div>
             </div>
-          </aside>
+          </Bench>
         )}
 
         {/* ---------------------------------------------------------- phones and tablets: the atlas, then the chapters */}
       </Frame>
+      </div>
 
       {/* Narrower screens: chapters in a popover from a floating pill. */}
       {pill && (
@@ -1800,6 +1909,49 @@ function EraReader({
         </Frame>
       )}
     </ReaderContext.Provider>
+  );
+}
+
+/**
+ * The rule a part opens on. It is the period's own line (docs/visual.md §1, "the line is time"): the
+ * part's years are lit on it in indigo, a single year as a tick, a part about how we know (after the
+ * period) as a mark off its right end, and a part about the whole period as the whole line, tinted.
+ * Decorative: the part's date is in words in the row of tags under its title.
+ */
+function PartLine({
+  within,
+  mark,
+  later,
+}: {
+  within: [number, number] | null;
+  mark: number | [number, number] | null;
+  later: boolean;
+}) {
+  const span = within ? Math.max(1e-6, within[1] - within[0]) : 1;
+  const at = (y: number) => Math.min(100, Math.max(0, ((y - (within?.[0] ?? 0)) / span) * 100));
+  const [m0, m1] = mark === null ? [null, null] : typeof mark === "number" ? [mark, mark] : mark;
+  const dated = within !== null && m0 !== null && m1 !== null && !later;
+  return (
+    <div aria-hidden className="relative h-[9px]">
+      <span className="absolute inset-x-0 top-1 h-px bg-rule" />
+      {later ? (
+        <span className="absolute top-[3px] right-0 h-[3px] w-6 rounded-full bg-indigo" />
+      ) : dated ? (
+        m1! - m0! > 0 ? (
+          <span
+            className="absolute top-[3px] h-[3px] rounded-full bg-indigo"
+            style={{ left: `${at(m0!)}%`, width: `max(${at(m1!) - at(m0!)}%, 6px)` }}
+          />
+        ) : (
+          <span
+            className="absolute top-0 h-[9px] w-[3px] -translate-x-1/2 rounded-full bg-indigo"
+            style={{ left: `${at(m0!)}%` }}
+          />
+        )
+      ) : (
+        within !== null && <span className="absolute inset-x-0 top-[3px] h-[3px] rounded-full bg-indigo-tint" />
+      )}
+    </div>
   );
 }
 

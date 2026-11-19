@@ -156,7 +156,7 @@ export function CustomiseButton({
           <Check
             checked={view.railOrder?.[0] === "notes"}
             onChange={(on) => yv.set({ railOrder: on ? ["notes", "in_this_part", "atlas"] : null })}
-            label="Study notes above the map"
+            label="My AI's notes first, beside the reading"
           />
           {stops.length > 0 && <p className="mt-2 text-sm text-ink-3">Turning points on the year scrubber</p>}
           {stops.map((s) => (

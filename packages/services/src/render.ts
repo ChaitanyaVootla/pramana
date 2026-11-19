@@ -80,6 +80,23 @@ function renderBlock(b: Block, view: PageView): string {
           return `- ${m ? mediaLine(m) : `[missing media ${i.media}]`}${i.caption ? `\n  ${i.caption}` : ""}`;
         })
         .join("\n")}`;
+    case "tracks": {
+      const label = (ref: string) =>
+        b.ages.find((a) => a.entity === ref)?.label ?? view.entities[ref]?.label ?? ref;
+      const rows = b.facets.map((f) => {
+        const cells = b.cells
+          .filter((c) => c.facet === f.key)
+          .map((c) => {
+            const e = c.excerptId ? view.excerpts[c.excerptId] : undefined;
+            const claims = c.claimIds.length ? ` [claims ${c.claimIds.join(", ")}]` : "";
+            const quote = e ? `\n    > “${e.quote ?? "?"}” — ${e.source.short}` : "";
+            return `  - ${label(c.age)}: ${c.text}${claims}${quote}`;
+          });
+        return `* ${f.label} (${f.key})${f.description ? `: ${f.description}` : ""}\n${cells.join("\n")}`;
+      });
+      const ages = b.ages.map((a) => label(a.entity)).join(", ");
+      return `${tag} Across the ages${b.title ? `: ${b.title}` : ""} (${b.facets.length} facets by ${b.ages.length} ages: ${ages})${b.intro ? `\n${b.intro}` : ""}\n${rows.join("\n")}`;
+    }
     default:
       // Block types added later render as their tag until they get a renderer here.
       return `${tag} ${(b as { type: string }).type}`;

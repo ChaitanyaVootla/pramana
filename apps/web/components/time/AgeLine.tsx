@@ -19,6 +19,7 @@ import { AgeLineLive } from "./AgeLineLive";
 export function AgeLine({
   ages,
   focus = null,
+  through,
   mark = null,
   markLabel,
   progress = {},
@@ -32,6 +33,11 @@ export function AgeLine({
   ages: Age[];
   /** The age this page belongs to (its entity id or slug): lit and named. */
   focus?: string | null;
+  /**
+   * A subject followed through time (a theme page) has no one age: the ages it passes through
+   * (entity ids or slugs) are drawn full, the others tinted.
+   */
+  through?: string[];
   /** The subject's own date, as an astronomical year or a span; drawn as the cursor. */
   mark?: number | [number, number] | null;
   /** Words for the cursor ("c. 268–232 BCE"). Default: the year(s). */
@@ -57,6 +63,7 @@ export function AgeLine({
   const u = unitScale("stretched", start, NOW);
   const pct = (y: number) => Math.min(100, Math.max(0, u(y) * 100));
   const lit = ages.find((a) => a.id === focus || a.slug === focus) ?? null;
+  const passed = through ? new Set(through) : null;
   const compact = size === "compact";
   const [m0, m1] = mark === null ? [null, null] : Array.isArray(mark) ? mark : [mark, mark];
   // When the subject *is* the lit age (an era page), its bar says it all: no cursor, no second date.
@@ -110,7 +117,13 @@ export function AgeLine({
 
   return (
     <nav
-      aria-label={lit ? `Where ${lit.label} sits among the ages` : "The ages of Indian history"}
+      aria-label={
+        lit
+          ? `Where ${lit.label} sits among the ages`
+          : passed
+            ? "The ages this subject is followed through"
+            : "The ages of Indian history"
+      }
       className={cn("relative w-full font-sans select-none", className)}
       style={{ height: h }}
     >
@@ -125,6 +138,7 @@ export function AgeLine({
         const l = pct(a.from);
         const r = Math.max(pct(a.to), l + 0.25);
         const on = lit?.id === a.id;
+        const inPath = passed ? passed.has(a.id) || passed.has(a.slug) : null;
         // An age inside another's years sits in the lower sub-row, so a mouse can reach both.
         const lower = lane.get(a.id) === 1;
         const prog = a.page ? progress[a.page.slug] : undefined;
@@ -133,7 +147,13 @@ export function AgeLine({
         const segment = {
           className: cn(
             "absolute block rounded-[1px] transition-colors",
-            a.page ? "bg-indigo hover:bg-indigo-deep dark:hover:bg-indigo-tint" : "bg-indigo-tint hover:bg-indigo/60",
+            inPath === null
+              ? a.page
+                ? "bg-indigo hover:bg-indigo-deep dark:hover:bg-indigo-tint"
+                : "bg-indigo-tint hover:bg-indigo/60"
+              : inPath
+                ? "bg-indigo hover:bg-indigo-deep dark:hover:bg-indigo-tint"
+                : "bg-indigo-tint/70 hover:bg-indigo/60",
             on && "ring-1 ring-ink ring-offset-1 ring-offset-chuna",
           ),
           style: {

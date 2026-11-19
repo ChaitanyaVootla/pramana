@@ -11,6 +11,7 @@ import {
   entityRefsInSpec,
   PageSpec,
   entityRefsInBlock,
+  excerptIdsInBlock,
   markdownInBlock,
   mediaRefsInBlock,
   mediaRefsInSpec,
@@ -697,7 +698,7 @@ async function loadPageView(ref: string): Promise<PageView> {
     claimIdsInBlock(b).forEach((id) => claimIds.add(id));
     entityRefsInBlock(b).forEach((ref) => entityRefs.add(ref));
     mediaRefsInBlock(b).forEach((id) => mediaIds.add(id));
-    if (b.type === "quote") excerptIds.add(b.excerptId);
+    excerptIdsInBlock(b).forEach((id) => excerptIds.add(id));
     for (const md of markdownInBlock(b)) {
       for (const l of extractLinks(md)) {
         if (l.scheme === "entity") entityRefs.add(l.target);

@@ -7,6 +7,7 @@ import {
   claimIdsInBlock,
   claimIdsInSpec,
   entityRefsInBlock,
+  excerptIdsInBlock,
   entityRefsInSpec,
   isUnknownArtist,
   markdownInBlock,
@@ -188,7 +189,7 @@ async function checkBlockRefs(tx: Tx, blocks: Block[], spec?: PageSpec | null): 
     for (const id of claimIdsInBlock(block)) claimIds.add(id);
     entityRefsInBlock(block).forEach((ref) => entityRefs.add(ref));
     mediaRefsInBlock(block).forEach((id) => mediaIds.add(id));
-    if (block.type === "quote") excerptIds.add(block.excerptId);
+    excerptIdsInBlock(block).forEach((id) => excerptIds.add(id));
     for (const md of markdownInBlock(block)) {
       for (const link of extractLinks(md)) {
         if (link.scheme === "entity") entityRefs.add(link.target);

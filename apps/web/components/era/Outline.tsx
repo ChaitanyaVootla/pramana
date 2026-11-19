@@ -66,10 +66,13 @@ export interface OutlineItem {
 }
 
 /**
- * The story in N parts, as the chapter list beside the reading: each part's
- * number, title, date and a small strip placing it in the period. The part
- * being read is marked and opens to show its one-line promise; the marker
- * moves with the reader and nothing else on the page redraws.
+ * The contents of a reading page: the lightest of its three columns. One thin
+ * thread runs down it; each part is a number and a title on the thread, in
+ * small quiet type, with the learner's progress through it. Only the part
+ * being read is drawn in ink: its stretch of the thread turns indigo and it
+ * opens to show its date and its one-line promise. Nothing is filled or boxed,
+ * so the column never competes with the reading. The marker moves with the
+ * reader and nothing else on the page redraws.
  */
 export function Outline({
   items,
@@ -83,18 +86,18 @@ export function Outline({
   active: string | null;
   within: [number, number] | null;
   footer?: React.ReactNode;
-  /** Inside a popover: no heading, larger touch targets. */
+  /** Inside a popover: no heading, larger touch targets, every part's date. */
   dense?: boolean;
   onNavigate?: (id: string) => void;
 }) {
   return (
     <nav aria-label="Chapters" className="font-sans">
       {!dense && (
-        <p className="mb-2.5 pl-3 text-xs font-medium text-ink-3">
+        <p className="mb-3 text-xs text-ink-3">
           The story in {items.length} parts
         </p>
       )}
-      <ol className="relative">
+      <ol className="relative border-l border-rule">
         {items.map((item, i) => {
           const on = item.id === active;
           return (
@@ -110,34 +113,39 @@ export function Outline({
                   item.promise ? `outline-promise-${dense ? "p" : "s"}-${item.id}` : undefined
                 }
                 className={cn(
-                  "group relative grid grid-cols-[1.25rem_minmax(0,1fr)] gap-x-1.5 rounded-md py-2 pr-2 pl-3 no-underline transition-colors duration-200",
-                  "before:absolute before:top-2 before:bottom-2 before:left-0 before:w-[2px] before:rounded-full before:transition-colors before:duration-200",
-                  on ? "bg-indigo-wash/70 before:bg-indigo" : "before:bg-rule hover:bg-rule-soft",
-                  dense && "py-2.5",
+                  "group relative -ml-px grid grid-cols-[1.125rem_minmax(0,1fr)] gap-x-1 rounded-r-sm border-l-2 pr-1 pl-3 no-underline transition-colors duration-200",
+                  dense ? "py-2.5" : "py-[0.4375rem]",
+                  on ? "border-indigo" : "border-transparent hover:border-ink-3",
                 )}
               >
                 <span
                   className={cn(
-                    "pt-px text-xs tnum transition-colors duration-200",
+                    "text-xs leading-[1.375rem] tnum transition-colors duration-200",
                     on ? "font-medium text-indigo" : "text-ink-3",
                   )}
                 >
                   {i + 1}
                 </span>
                 <span className="min-w-0">
-                  <span
-                    className={cn(
-                      "block text-ui leading-snug transition-colors duration-200",
-                      on ? "font-medium text-ink" : "text-ink-2 group-hover:text-ink",
-                    )}
-                  >
-                    {item.title}
+                  <span className="flex items-start gap-2">
+                    <span
+                      className={cn(
+                        "min-w-0 flex-1 leading-[1.375rem] transition-colors duration-200",
+                        on
+                          ? "text-ui font-medium text-ink"
+                          : "text-sm text-ink-2 group-hover:text-ink",
+                      )}
+                    >
+                      {item.title}
+                    </span>
+                    {item.seal && <span className="flex h-[1.375rem] shrink-0 items-center">{item.seal}</span>}
                   </span>
-                  <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3 tnum">
-                    {within && <Strip item={item} within={within} />}
-                    <span>{item.whenLabel}</span>
-                    {item.seal && <span className="ml-auto shrink-0">{item.seal}</span>}
-                  </span>
+                  {(on || dense) && (
+                    <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3 tnum">
+                      {within && <Strip item={item} within={within} />}
+                      <span>{item.whenLabel}</span>
+                    </span>
+                  )}
                   {item.promise && (
                     <span
                       className={cn(
@@ -149,7 +157,7 @@ export function Outline({
                       <span className="overflow-hidden">
                         <span
                           id={`outline-promise-${dense ? "p" : "s"}-${item.id}`}
-                          className="block pt-1.5 text-sm leading-snug text-ink-2"
+                          className="block pt-1.5 pb-0.5 text-sm leading-snug text-ink-2"
                         >
                           {item.promise}
                         </span>

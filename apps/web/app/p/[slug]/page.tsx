@@ -104,8 +104,15 @@ export default async function PageRoute({ params }: Params) {
   const progress = Object.fromEntries(
     (strip?.ages ?? []).map((a) => [a.slug, { state: a.state, partsStudied: a.partsStudied, parts: a.parts }]),
   );
+  // A theme follows one subject through many ages: its line lights every age its tracks pass through.
+  const tracks = view.page.kind === "theme" ? view.page.blocks.find((x) => x.type === "tracks") : undefined;
+  const through =
+    tracks && tracks.type === "tracks"
+      ? tracks.ages.flatMap((a) => view.entities[a.entity]?.id ?? [])
+      : [];
   const line = {
     ages: spine,
+    ...(through.length > 0 && !entity ? { through } : {}),
     focus: entity?.id ?? null,
     mark,
     markLabel: entity?.whenLabel ?? undefined,
@@ -114,7 +121,7 @@ export default async function PageRoute({ params }: Params) {
     indexHref: overview ? `/p/${overview.slug}` : undefined,
   };
   const ageLine =
-    spine.length > 0 && entity ? (
+    spine.length > 0 && (entity || through.length > 0) ? (
       <>
         <AgeLine {...line} className="hidden sm:block" />
         <AgeLine {...line} size="compact" className="sm:hidden" />

@@ -7,11 +7,11 @@ import { Map as MapIcon, MapPin, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePointAt } from "@/components/atlas/bus";
-import { CERTAINTY_WORDS, EntityChip } from "@/components/chips/Chips";
+import { CERTAINTY_WORDS } from "@/components/chips/Chips";
 import { initialOf } from "@/lib/names";
 import { useReader } from "@/components/chips/reader";
 import { TimeStrip } from "@/components/time/TimeStrip";
-import { EntityThumb, MediaTile, type ViewerMedia } from "@/components/media";
+import { EntityThumb } from "@/components/media";
 import { Button } from "@/components/ui/button";
 import { claimTier, datedLabel, stripMark, yearOf } from "@/lib/era";
 import { cn } from "@/lib/utils";
@@ -113,12 +113,12 @@ function Person({ person, within }: { person: EntityCard; within: [number, numbe
   const initial = initialOf(person);
   const point = usePointAt([person.id]);
   return (
-    <li className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0" {...point}>
+    <li className="flex items-start gap-3 py-2 first:pt-0 last:pb-0" {...point}>
       {person.image ? (
-        <EntityThumb image={person.image} size={40} decorative />
+        <EntityThumb image={person.image} size={36} decorative />
       ) : (
         <span
-          className="flex size-10 shrink-0 items-center justify-center rounded-md bg-indigo-wash font-heading text-lg text-indigo"
+          className="flex size-9 shrink-0 items-center justify-center rounded-md bg-paper font-heading text-lg text-indigo"
           lang={initial.lang}
           aria-hidden
         >
@@ -133,7 +133,7 @@ function Person({ person, within }: { person: EntityCard; within: [number, numbe
           {person.label}
         </Link>
         {person.description && (
-          <p className="mt-0.5 line-clamp-2 text-sm leading-snug text-ink-2">
+          <p className="mt-0.5 truncate text-sm leading-snug text-ink-2" title={person.description}>
             {person.description}
           </p>
         )}
@@ -160,87 +160,56 @@ function Witness({ person }: { person: EntityCard }) {
 }
 
 /**
- * The quiet default of the context card: for the part being read, who is
- * here (with when they reigned or lived), its places, its pictures, and words
- * to know. It follows the reader; the map does not. "Show its map" moves the
- * map to the part, and only when the reader asks.
+ * "This part" in the bench: for the part being read, who is in it (with when
+ * they reigned or lived) and the words to know. Its places are on the map and
+ * in the part's own row of tags, and its pictures are in the part, so neither
+ * is repeated here. It follows the reader; the map does not. "Show its map"
+ * moves the map to the part, and only when the reader asks.
  */
 export function InThisPart({
   index,
   title,
   people,
   witnesses = [],
-  places,
   terms,
   within,
   ask,
   showMap,
-  pictures = [],
 }: {
   /** "Ask your AI about this part". */
   ask?: React.ReactNode;
   /** The map in the part's year, with its places framed (when the page has an atlas). */
   showMap?: { year: string | null; go: () => void } | null;
-  /** Pictures attached to the part, beyond any shown beside its summary. */
-  pictures?: { key: string; media: ViewerMedia; caption?: string }[];
   index: number;
   title: string;
   people: EntityCard[];
   /** People whose words about the events are the evidence (Marx on 1857), shown apart and quieter. */
   witnesses?: EntityCard[];
-  places: EntityCard[];
   terms: EntityCard[];
   within: [number, number] | null;
 }) {
-  const empty = people.length + witnesses.length + places.length + terms.length === 0;
+  const empty = people.length + witnesses.length + terms.length === 0;
   return (
-    <Panel
-      title={<>You are in Part {index + 1}</>}
-      action={
-        showMap ? (
-          <button
-            type="button"
-            onClick={showMap.go}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-sm font-sans text-sm font-medium text-indigo hover:underline"
-          >
-            <MapIcon className="size-3.5" aria-hidden />
-            Show its map
-            {showMap.year && <span className="font-normal text-ink-3 tnum">{showMap.year}</span>}
-          </button>
-        ) : null
-      }
-    >
-      <p className="-mt-2 mb-3 font-heading text-lg leading-snug text-ink" aria-live="polite">
+    <section className="min-w-0 font-sans" aria-label={`Part ${index + 1}: ${title}`}>
+      <p className="text-sm text-ink-3 tnum">You are in Part {index + 1}</p>
+      <p className="mt-0.5 font-heading text-xl leading-snug text-ink" aria-live="polite">
         {title}
       </p>
-      {pictures.length > 0 && (
-        <ul
-          aria-label="Pictures in this part"
-          className={cn("mb-4 grid gap-2", pictures.length === 1 ? "grid-cols-2" : "grid-cols-3")}
+      {showMap && (
+        <button
+          type="button"
+          onClick={showMap.go}
+          className="mt-1.5 inline-flex items-center gap-1.5 rounded-sm text-sm font-medium text-indigo hover:underline"
         >
-          {pictures.map((p) => (
-            <li key={p.key} className="aspect-square min-w-0">
-              <MediaTile media={p.media} caption={p.caption} fit="cover" />
-            </li>
-          ))}
-        </ul>
-      )}
-      {places.length > 0 && (
-        <div className="mb-4">
-          <h3 className="mb-1.5 font-sans text-xs font-medium text-ink-3">Places</h3>
-          <ul className="flex flex-wrap gap-1.5">
-            {places.map((p) => (
-              <li key={p.id}>
-                <EntityChip entity={p} />
-              </li>
-            ))}
-          </ul>
-        </div>
+          <MapIcon className="size-3.5" aria-hidden />
+          Show its map
+          {showMap.year && <span className="font-normal text-ink-3 tnum">{showMap.year}</span>}
+        </button>
       )}
       {people.length > 0 && (
-        <div className="mb-4">
-          <h3 className="mb-2 font-sans text-xs font-medium text-ink-3">Who took part</h3>
-          <ul className="divide-y divide-rule-soft">
+        <div className="mt-4">
+          <h3 className="mb-1.5 text-xs font-medium text-ink-3">Who took part</h3>
+          <ul className="divide-y divide-rule">
             {people.map((p) => (
               <Person key={p.id} person={p} within={within} />
             ))}
@@ -248,9 +217,9 @@ export function InThisPart({
         </div>
       )}
       {witnesses.length > 0 && (
-        <div className="mb-4">
-          <h3 className="mb-1.5 font-sans text-xs font-medium text-ink-3">Who wrote about it</h3>
-          <ul className="space-y-1 font-sans text-sm">
+        <div className="mt-4">
+          <h3 className="mb-1.5 text-xs font-medium text-ink-3">Who wrote about it</h3>
+          <ul className="space-y-1 text-sm">
             {witnesses.map((p) => (
               <Witness key={p.id} person={p} />
             ))}
@@ -258,9 +227,9 @@ export function InThisPart({
         </div>
       )}
       {terms.length > 0 && (
-        <div>
-          <h3 className="mb-1.5 font-sans text-xs font-medium text-ink-3">Words to know</h3>
-          <dl className="space-y-2 font-sans text-note">
+        <div className="mt-4">
+          <h3 className="mb-1.5 text-xs font-medium text-ink-3">Words to know</h3>
+          <dl className="space-y-2 text-ui">
             {terms.map((t) => (
               <div key={t.id}>
                 <dt className="font-medium text-ink">{t.label}</dt>
@@ -270,16 +239,13 @@ export function InThisPart({
           </dl>
         </div>
       )}
-      <p
-        className={cn(
-          "font-sans text-ink-3",
-          empty ? "text-note" : "mt-4 border-t border-rule-soft pt-3 text-xs",
-        )}
-      >
-        Select a claim to see its sources here, or a place to find it on the map.
-      </p>
-      {ask && <div className="mt-3">{ask}</div>}
-    </Panel>
+      {empty && (
+        <p className="mt-3 text-ui text-ink-2">
+          Select a claim to see its sources here, or a place to find it on the map.
+        </p>
+      )}
+      {ask && <div className="mt-4">{ask}</div>}
+    </section>
   );
 }
 
@@ -413,10 +379,13 @@ export function NotesPanel({
   notes,
   fresh,
   onDismiss,
+  bare = false,
 }: {
   notes: NoteView[];
   fresh: Set<string>;
   onDismiss: (id: string) => void;
+  /** Under the bench's "From your AI" tab, which is its heading: the notes alone. */
+  bare?: boolean;
 }) {
   if (!notes.length) return null;
   // Archive goes through the page (it drops the note at once); pin and unpin come back as a live event.
@@ -424,6 +393,27 @@ export function NotesPanel({
     action === "archive"
       ? onDismiss(note.id)
       : void setNoteStatusAction(note.id, action === "pin" ? "pinned" : "live");
+  const list = (
+    <ol className="space-y-5">
+      {notes.slice(0, 3).map((n) => (
+        <li key={n.id}>
+          <NoteCard note={n} fresh={fresh.has(n.id)} onAction={act} />
+        </li>
+      ))}
+    </ol>
+  );
+  if (bare)
+    return (
+      <div className="font-sans">
+        {list}
+        <Link
+          href="/notes"
+          className="mt-4 inline-block text-sm text-ink-2 no-underline hover:text-ink hover:underline"
+        >
+          Notes history
+        </Link>
+      </div>
+    );
   return (
     <Panel
       title="From your AI"
@@ -433,13 +423,7 @@ export function NotesPanel({
         </Link>
       }
     >
-      <ol className="space-y-5">
-        {notes.slice(0, 3).map((n) => (
-          <li key={n.id}>
-            <NoteCard note={n} fresh={fresh.has(n.id)} onAction={act} />
-          </li>
-        ))}
-      </ol>
+      {list}
     </Panel>
   );
 }

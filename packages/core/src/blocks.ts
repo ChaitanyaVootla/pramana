@@ -47,6 +47,9 @@ export const BlockId = z
   .string()
   .regex(/^[a-z0-9][a-z0-9_-]{0,63}$/i, "block ids: letters, digits, '_' or '-'");
 
+/** A facet key in a tracks block: lowercase, short. */
+const TrackKey = z.string().regex(/^[a-z][a-z0-9-]{0,39}$/);
+
 const base = {
   id: BlockId,
   /** Which theme tab the block belongs to. Omitted = always shown. */
@@ -280,6 +283,79 @@ export const Block = z.discriminatedUnion("type", [
     markdown: z.string().min(1).max(5000),
   }),
   /**
+   * One subject followed through the ages (a theme page's spine): rows are
+   * facets of life (food, work, home…), columns are ages (entities, usually
+   * from the overview's spine), and each cell says in a line or two what that
+   * facet was like then, linking the claims it rests on, with an optional
+   * first-hand quotation (an excerpt). Read across, a facet changes over
+   * time; read down, an age is seen whole. Empty cells are allowed: say what
+   * is not known rather than fill them.
+   */
+  z
+    .object({
+      ...base,
+      type: z.literal("tracks"),
+      title: z.string().max(200).optional(),
+      /** One or two sentences on how to read it (Markdown, claim links welcome). */
+      intro: z.string().max(1000).optional(),
+      facets: z
+        .array(
+          z.object({
+            key: TrackKey,
+            label: z.string().min(1).max(60),
+            /** What the row covers, in a line. */
+            description: z.string().max(300).optional(),
+          }),
+        )
+        .min(1)
+        .max(12),
+      ages: z
+        .array(
+          z.object({
+            entity: EntityRef,
+            /** A short column label; the entity's own label otherwise. */
+            label: z.string().min(1).max(60).optional(),
+            /** The block (usually the age's chapter on this page) to jump to. */
+            target: BlockId.optional(),
+          }),
+        )
+        .min(2)
+        .max(24),
+      cells: z
+        .array(
+          z.object({
+            facet: TrackKey,
+            /** The age's entity, written exactly as in `ages`. */
+            age: EntityRef,
+            /** One or two sentences, Markdown, linking the claims they rest on. */
+            text: z.string().min(1).max(500),
+            claimIds: z.array(Ref).max(12).default([]),
+            /** A first-hand quotation shown with the cell. */
+            excerptId: Ref.optional(),
+          }),
+        )
+        .max(288),
+    })
+    .superRefine((b, ctx) => {
+      const facets = new Set(b.facets.map((f) => f.key));
+      const ages = new Set(b.ages.map((a) => a.entity));
+      if (facets.size !== b.facets.length)
+        ctx.addIssue({ code: "custom", path: ["facets"], message: "duplicate facet key" });
+      if (ages.size !== b.ages.length)
+        ctx.addIssue({ code: "custom", path: ["ages"], message: "duplicate age" });
+      const seen = new Set<string>();
+      b.cells.forEach((c, i) => {
+        if (!facets.has(c.facet))
+          ctx.addIssue({ code: "custom", path: ["cells", i, "facet"], message: `no facet "${c.facet}"` });
+        if (!ages.has(c.age))
+          ctx.addIssue({ code: "custom", path: ["cells", i, "age"], message: `no age "${c.age}" in ages` });
+        const k = `${c.facet}|${c.age}`;
+        if (seen.has(k))
+          ctx.addIssue({ code: "custom", path: ["cells", i], message: "two cells for one facet and age" });
+        seen.add(k);
+      });
+    }),
+  /**
    * "Guess first": one question at the start of a chapter, answered before
    * reading (pretesting). The answer, with the claim that settles it, is shown
    * after `revealAfter`, else in the chapter's retrieval check, else at the
@@ -388,6 +464,8 @@ export function markdownInBlock(block: Block): string[] {
       return block.note ? [block.note] : [];
     case "chapter":
       return block.brief ? [block.brief.happened, block.brief.howWeKnow] : [];
+    case "tracks":
+      return [...(block.intro ? [block.intro] : []), ...block.cells.map((c) => c.text)];
     default:
       return [];
   }
@@ -397,6 +475,13 @@ export function markdownInBlock(block: Block): string[] {
 export function claimIdsInCheckItem(item: CheckItem): string[] {
   if (item.kind === "recall") return [item.claimId];
   if (item.kind === "order") return item.items.map((x) => x.claimId);
+  return [];
+}
+
+/** Excerpts a block shows outside Markdown links (a quote, a tracks cell's quotation). */
+export function excerptIdsInBlock(block: Block): string[] {
+  if (block.type === "quote") return [block.excerptId];
+  if (block.type === "tracks") return block.cells.flatMap((c) => (c.excerptId ? [c.excerptId] : []));
   return [];
 }
 
@@ -438,6 +523,15 @@ export function claimIdsInBlock(block: Block): string[] {
       );
     case "meanwhile":
       return block.items.flatMap((i) => i.claimIds);
+    case "tracks":
+      return [
+        ...block.cells.flatMap((c) => c.claimIds),
+        ...markdownInBlock(block).flatMap((md) =>
+          extractLinks(md)
+            .filter((l) => l.scheme === "claim")
+            .map((l) => l.target),
+        ),
+      ];
     case "guess":
       return [
         block.claimId,
@@ -469,6 +563,8 @@ export function entityRefsInBlock(block: Block): string[] {
       return block.items.map((i) => i.entity);
     case "meanwhile":
       return block.items.flatMap((i) => (i.entity ? [i.entity] : []));
+    case "tracks":
+      return block.ages.map((a) => a.entity);
     case "check":
       return block.items.flatMap((i) => (i.kind === "place" ? [i.entity] : []));
     case "viz":

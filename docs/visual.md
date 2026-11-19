@@ -26,7 +26,8 @@ dyes of Indian cloth (indigo, madder, turmeric), and the way an inscription is c
   itself. Nothing floats unless it really floats (menus, the search, the evidence drawer).
 - **The line is time.** One horizontal rule runs through the product: the age band on the home page, and the same
   band carried into every era and entity page as the *age line* (`components/time/AgeLine.tsx`). Horizontal bars
-  in indigo are always years.
+  in indigo are always years. A part of an era page opens on the same line at the width of the reading column,
+  its own years lit (the *part line*); a theme page's age line lights every age the subject is followed through.
 - **The other dyes are meanings, never decoration.** Sandstone is place; turmeric is contested or a belief under
   examination (and something waiting for the learner's decision); madder is refuted; sage is a person's
   confirmation. The study partner (the AI) gets no colour of its own: it is drawn in ink with a *dotted* edge,
@@ -101,6 +102,7 @@ rendering, and most popular families fail it. Check any new family the same way 
 | Title     | `text-3xl`  | 34 / 1.08    | heading | Section titles that open a page region; the claim (serif).  |
 | Heading   | `text-2xl`  | 26 / 1.15    | heading | Part and chapter headings; rows of the chronicle.           |
 | Subhead   | `text-xl`   | 21 / 1.25    | heading | Rail headings, tile titles, names in lists.                 |
+| Statement | 23 / 1.42   | (20 on phones) | serif | What happened, in a part's one-minute version; the saying in "Often said". |
 | Lede      | `text-lg`   | 19 / 1.5     | serif   | The one-paragraph lede under a title; a question.           |
 | Reading   | `text-base` | 17 / 1.62    | serif   | Prose. Measure 62–66ch.                                     |
 | Note      | `text-note` | 16 / 1.5     | sans    | Summaries, tile text, answers, navigation.                  |
@@ -151,8 +153,27 @@ Claims (`/c/…`), entities (`/e/…`) and sources (`/s/…`) are reached from w
 
 - **Wide (≥1280):** every page is a grid of content columns with no empty column. The reading column is
   40–44rem; everything else (atlas, pictures, evidence, lists) takes the rest. At 1920 the frame is 1880px: a
-  reading page is contents (13rem) | reading (44rem) | rail (the remainder, ≥ 27rem).
-- **Medium (768–1279):** two columns: reading | rail (20rem).
+  reading page is contents (13rem) | reading (44rem) | bench (the remainder, ≥ 27rem).
+- **Medium (1024–1279):** two columns: reading | bench (20rem). Below 1024 the bench folds into the page.
+- **A reading page has three columns, and each looks like what it is.** The eye should know at once which is
+  navigation, which is reading and which is context, so they differ in ground, weight and density, not in
+  decoration:
+  - *The contents* (left, from 1280px; `components/era/Outline.tsx`) are the lightest thing on the page: one
+    thin thread down the column, each part a number and a title in small `ink-2` sans with the learner's
+    progress seal. Nothing is filled or boxed. Only the part being read is in ink: its stretch of the thread
+    turns indigo and it opens to show its date and one-line promise.
+  - *The reading* (centre) stands on the page, and is the only column that speaks in the serif. It carries
+    the scale: part titles at 34, the statement at 23, prose at 17.
+  - *The bench* (right; `.bench`, `components/era/Bench.tsx`) is cut into the page along its right edge: the
+    field's ground with one fine edge, flush under the top bar, down to the footer and out to the edge of the
+    window. It does not scroll with the reading. Sans throughout, compact (`text-ui` and smaller). It holds
+    the map with its year scrubber, then *one* pane at a time, chosen with underlined tabs: "This part" (who
+    took part, with their reigns, and words to know), "Timeline" (the period's people and events; the line is
+    the map's year) and "From your AI". Evidence for a claim, or a place the reader picked, floats over the
+    pane (paper, `--shadow-pop`) while the map shrinks to a strip. On a page with nothing else to show, the
+    bench says that a claim's sources open there.
+  What used to crowd the rail has gone where it belongs: a part's places are on the map and in the part's
+  row of tags; its pictures are in the part; the borders' credit is in the map's "i".
 - **Narrow (<768):** one column. Evidence opens in a bottom sheet; maps are `inline`, 260–280px tall. Nothing is
   hidden on a phone that a desktop shows; it is folded.
 - **PWA:** safe areas are honoured (`env(safe-area-inset-*)`); the bottom bar sits inside the home indicator.
@@ -196,8 +217,12 @@ Claims (`/c/…`), entities (`/e/…`) and sources (`/s/…`) are reached from w
 ### Where boxes are allowed
 
 A box (edge or background) means one of exactly three things: *this whole thing is one link* (a tile); *this is
-cut into the page* (a field: evidence, a question); *this floats* (menu, dialog, drawer, sheet, toast). Everything
-else is laid out with type, space and rules.
+cut into the page* (a field: evidence, a question, how we know; and, at the scale of the page, the bench, §4);
+*this floats* (menu, dialog, drawer, sheet, toast). Everything else is laid out with type, space and rules.
+
+A left rule is an aside in someone's voice, never the main line: turmeric for a caution or an open debate,
+madder or turmeric for "Often said", `rule` for a plain note, dotted `ink-3` for the study partner. The reading's
+own statements carry no rule.
 
 ## 6. Pages
 
@@ -214,9 +239,42 @@ its page, what it holds and how far the learner has got) and is one link; an unw
 its place. No card grid. Then the study partner's latest notes and the recent changes as plain lists.
 
 **Era** (`/p/…`, reader): the *age line* across the frame, this era lit; the display title with Devanagari, the
-dates in the heading face, the lede in the serif, the lead picture beside the lede at ≥1280. Parts: "Part n of m"
-kicker, heading, one row of chips, prose on the page, the summary as prose with a thin indigo left rule, the
-check in a *field*. Rail: heading + content blocks; notes from the AI as marginalia (§7).
+dates in the heading face, the lede in the serif, the lead picture beside the lede at ≥1280. The three columns
+are in §4. A part is built from forms that differ, so the column never reads as one wall:
+
+1. the *part line* (the period's line, the part's years lit; a part about the whole period is the whole line,
+   tinted; a part about how we know is a mark off its right end), with 80–96px of air above it;
+2. "Part n of m", the title at 34, one row of tags (date, places, people);
+3. "Guess first", a question in a *field*;
+4. *what happened* as the statement: 23px serif on the page, no rule, its sentences linking their claims, with
+   the part's picture beside it from 1280px;
+5. *how we know* in a *field* under it (sans): the claim stands on the page, its grounds are cut into it;
+6. "Check yourself" as one line, then one outline button, "Read the whole part", with the time it takes.
+
+Open, the part keeps the same grammar: prose on the page; a quotation in a field at 21px with the indigo
+rule; a "how we know" note in a field; a caution, a debate and "Often said" as asides with a coloured left
+rule, the saying itself at statement size and what the evidence shows as rows under a rule. On phones the map's
+fold is a full-width band in the field's ground (the bench, folded), and the AI's notes follow the parts.
+
+**Theme** (`/p/…`, page kind `theme`): one subject followed through many ages, usually with no entity of its
+own. The head has no single date: the age line lights every age the subject passes through, and under the title
+the span stands where an era has its dates ("1500 BCE to 1947 CE", heading face) with "one subject followed
+through n ages, age by age" linking to the grid. Its spine is a `tracks` block (`components/era/Tracks.tsx`),
+which takes the full reading column:
+
+- *The weave*, in a field: every facet a row, every age a column, one small mark where they cross: tinted
+  where something is written, solid indigo where someone of the time is quoted, a dashed outline where
+  nothing is written yet. It is the overview, the picker and an honest picture of the gaps. Ages run along the
+  top as indigo bars (the line is time); facets are named down the left.
+- Under it the reader reads *one thread at a time*, chosen with a two-part switch: "Follow one thread" (one
+  facet, every age in order down the page, so the change is read top to bottom) or "Read one age" (every facet
+  of that age, with earlier/later buttons and links to the age's part and page). Rows are separated by rules;
+  the leading column is the age (or the facet) in the heading face, and it is a button that turns the reading
+  the other way at that crossing.
+- What is said is serif on the page with its claims linked into the evidence drawer (claims not linked in the
+  sentence follow it as "The evidence" with their seals); a quotation is a *voice*: a field with the indigo
+  rule, the words in the serif, the source in the sans.
+- Nothing scrolls sideways: at 390px the weave keeps every column (marks 8px, 16px apart) and rows stack.
 
 **Entity** (`/e/…`): answer first. The age line, a kind kicker, the display title with Devanagari, the span, the
 portrait at the right of the head, one sentence that says why this person or place matters, an evidence summary
@@ -254,8 +312,10 @@ The AI is a reader's companion, not a chat. It appears in three ways and only th
 1. **Presence.** In the top bar, a 16px glyph: two concentric rings. Connected: the inner ring is filled.
    Not connected: both rings dotted. It opens a calm popover with a dotted edge. On phones it also shows as a
    6px dot on the bottom bar's Search item.
-2. **Marginalia.** A note from the AI appears in the context rail (or under the part on a phone): sans, ink, a
-   dotted left rule in `ink-3`, the visual it posted inside a field, and a time. Notes never interrupt reading.
+2. **Marginalia.** A note from the AI appears under the bench's "From your AI" tab (or after the parts on a
+   phone): sans, ink, a dotted left rule in `ink-3`, the visual it posted inside a field, and a time. A note
+   that arrives while another tab is open puts a small turmeric dot on the tab (waiting on you); the pane does
+   not change by itself. Notes never interrupt reading.
 3. **Asking.** "Ask your AI about this" is an outline button with the presence glyph that copies a prepared
    prompt. Once per page head and once per claim in the evidence drawer, never on every row.
 

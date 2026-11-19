@@ -577,6 +577,30 @@ body:has([data-canvas-board]) footer.site-footer {
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-field);
 }
+/*
+ * The bench (docs/visual.md §4): the rail of a reading page is cut along the page's right edge, from
+ * the top bar to the footer and out to the edge of the window. The map, the timeline and what the part
+ * is about lie in it; the reading stays on the page. Its ground is the field's, with one fine edge.
+ */
+.bench {
+  position: relative;
+  background: var(--field);
+  box-shadow: inset 1px 0 0 var(--rule);
+}
+.bench::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: 50vw;
+  background: var(--field);
+  pointer-events: none;
+}
+/* The bench runs past the frame to the window's edge; this keeps that from widening the page. */
+.bench-clip {
+  overflow-x: clip;
+}
 /* Something that floats above the page. */
 .floating {
   background: var(--paper);

@@ -108,6 +108,11 @@ export interface AtlasProps {
   /** Draw the atlas's own period timeline (default true); off where the page has its own scrubber. */
   showTimeline?: boolean;
   /**
+   * In a reading page's bench: the timeline under the map is only the year scrubber (the ages lane),
+   * and the borders' credit stays in the map's "i". The page offers the people and events lanes itself.
+   */
+  slim?: boolean;
+  /**
    * People who appear on the page only as writers about it (claim role
    * "author": Megasthenes on the Mauryas, Marx on 1857): drawn thin and muted
    * in the people lane, and the last to keep a label.
@@ -342,6 +347,7 @@ export function Atlas({
   claimPlaces,
   collapsed = false,
   showTimeline = true,
+  slim = false,
   borders = true,
   still = false,
   caption: showCaption = true,
@@ -1339,9 +1345,9 @@ export function Atlas({
               label: title ?? (full ? "the whole record" : (peak?.name ?? "this period")),
             }}
             pageByEntity={pageByEntity}
-            height={full ? 190 : 168}
+            height={full ? 190 : slim ? 86 : 168}
             compact={!full}
-            layers={["ages", "people", "events"]}
+            layers={slim ? ["ages"] : ["ages", "people", "events"]}
             cursor={year}
             onCursorChange={scrub}
             cursorRange={range}
@@ -1414,7 +1420,7 @@ export function Atlas({
           </p>
         )}
         {/* Without a caption the credit stays in the map's attribution (its "i" button). */}
-        {showCaption && borders && (credit.length > 0 || caveats.length > 0) && (
+        {showCaption && !slim && borders && (credit.length > 0 || caveats.length > 0) && (
           <p className="text-[11px] leading-4 text-ink-3">
             {credit.length > 0 && (
               <>

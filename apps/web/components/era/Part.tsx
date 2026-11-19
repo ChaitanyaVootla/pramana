@@ -1,19 +1,23 @@
 "use client";
 
 import type { PageView } from "@pramana/services";
-import { ArrowDown, ChevronDown, Map as MapIcon } from "lucide-react";
+import { ArrowDown, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ChapterSkimmed } from "@/components/learn/ChapterProgressSeal";
 import { GuessLine } from "@/components/learn/Guess";
 import type { GuessBlock } from "@/components/learn/placement";
 import { Markdown } from "@/components/Markdown";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
- * The one-minute version of a part: what happened (its sentences link the
- * claims they rest on) and how we know. The part's date is in the chip row
- * above it. Below, a control opens the whole part; once open, the brief
- * shrinks to one "In short" line so the part does not say it twice.
+ * The one-minute version of a part, in two forms that say what each is
+ * (docs/visual.md §1, "incised, not boxed"): what happened stands on the page
+ * as the part's statement, large and in the serif, its sentences linking the
+ * claims they rest on; how we know is cut into the page under it, a field in
+ * the sans. The part's date is in the chip row above. Below, one button opens
+ * the whole part; once open, the brief shrinks to one "In short" line so the
+ * part does not say it twice.
  *
  * The summary is always there to read. The part's "Guess first" sits above it
  * as one line; only while the learner is answering it does the summary (which
@@ -29,7 +33,6 @@ export function PartBrief({
   onToggle,
   length,
   next,
-  onShowOnMap,
   check,
   guess,
   picture,
@@ -50,8 +53,6 @@ export function PartBrief({
   length: string;
   /** While skimming, the next part, and whether going there shows its year on the map. */
   next?: { label: string; onGo: () => void; mapYear: string | null } | null;
-  /** "Show on map: 261 BCE", when the part has a date and the page an atlas. */
-  onShowOnMap?: { year: string; go: () => void } | null;
   /** The part's "Check yourself" line, shown here while the part is folded. */
   check?: React.ReactNode;
   /** The part's "Guess first", drawn as one line above the summary while the part is folded. */
@@ -85,7 +86,8 @@ export function PartBrief({
   return (
     <>
       {guess && (
-        <div className="mt-6 max-w-[66ch]">
+        // A question put to the learner is cut into the page (a field), like the check after it.
+        <div className="field mt-6 max-w-[66ch] px-4 py-3">
           <GuessLine block={guess} view={view} onAnswering={setAnswering} />
         </div>
       )}
@@ -95,29 +97,28 @@ export function PartBrief({
         aria-label={label}
         className={cn(
           "scroll-mt-28",
-          guess ? "mt-4" : "mt-6",
+          guess ? "mt-6" : "mt-7",
           picture
-            ? "xl:grid xl:max-w-none xl:grid-cols-[minmax(0,1fr)_12rem] xl:items-start xl:gap-x-7"
+            ? "xl:grid xl:max-w-none xl:grid-cols-[minmax(0,1fr)_13rem] xl:items-start xl:gap-x-8"
             : "max-w-[66ch]",
         )}
       >
-        {/* The summary is prose with a thin indigo rule, not a box (docs/visual.md §6). */}
-        <div className="max-w-[66ch] min-w-0 border-l-2 border-indigo pl-4 sm:pl-5">
+        <div className="max-w-[66ch] min-w-0">
           {answering ? (
             <p className="font-sans text-note text-ink-3">
               The summary is back once you save or skip your guess.
             </p>
           ) : (
-            <dl className="space-y-3">
+            <dl>
               <div>
-                <dt className="font-sans text-xs font-medium text-ink-3">What happened</dt>
-                <dd className="mt-0.5">
-                  <Markdown className="text-base leading-[1.55] text-ink sm:text-lg [&_p]:inline">
+                <dt className="visually-hidden">What happened</dt>
+                <dd>
+                  <Markdown className="text-[1.25rem] leading-[1.45] text-ink sm:text-[1.4375rem] sm:leading-[1.42] [&_p]:inline">
                     {happened}
                   </Markdown>
                 </dd>
               </div>
-              <div>
+              <div className="field mt-5 px-4 py-3">
                 <dt className="font-sans text-xs font-medium text-ink-3">How we know</dt>
                 <dd className="mt-0.5">
                   <Markdown className="font-sans text-note leading-snug text-ink-2">
@@ -128,27 +129,12 @@ export function PartBrief({
             </dl>
           )}
           {check && <div className="mt-4">{check}</div>}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-rule-soft pt-3 font-sans text-sm">
-            <button
-              type="button"
-              onClick={onToggle}
-              aria-expanded={false}
-              className="inline-flex items-center gap-1.5 rounded-sm font-medium text-indigo hover:underline"
-            >
-              <ChevronDown className="size-4" aria-hidden />
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-sans text-sm">
+            <Button variant="outline" size="sm" onClick={onToggle} aria-expanded={false}>
+              <ChevronDown data-icon="inline-start" aria-hidden />
               Read the whole part
               <span className="font-normal text-ink-3">{length}</span>
-            </button>
-            {onShowOnMap && (
-              <button
-                type="button"
-                onClick={onShowOnMap.go}
-                className="hidden items-center gap-1.5 rounded-sm text-ink-2 hover:text-ink hover:underline lg:inline-flex"
-              >
-                <MapIcon className="size-3.5" aria-hidden /> Show on map
-                <span className="text-ink-3">{onShowOnMap.year}</span>
-              </button>
-            )}
+            </Button>
             {next && (
               <button
                 type="button"

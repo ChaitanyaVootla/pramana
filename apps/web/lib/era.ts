@@ -454,12 +454,14 @@ export function readingMinutes(seconds: number): number {
 /**
  * Seconds a block takes: 200 words a minute for anything read, 20 seconds
  * more for a quotation (read twice, slowly), 30 seconds for each question
- * answered, 10 for a picture. Deterministic: the same page always gives the
- * same estimate.
+ * answered, 10 for a picture, and 10 for each quotation in a "tracks" grid
+ * (short ones, read once among many). Deterministic: the same page always
+ * gives the same estimate.
  */
 export function blockSeconds(b: Block, words: (b: Block) => number): number {
   const read = words(b) * 0.3;
   if (b.type === "quote") return read + 20;
+  if (b.type === "tracks") return read + 10 * b.cells.filter((c) => c.excerptId).length;
   if (b.type === "guess") return read + 30;
   if (b.type === "check") return read + 30 * b.items.length;
   if (b.type === "figure" || b.type === "gallery") return read + 10;

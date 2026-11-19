@@ -15,6 +15,7 @@ import { Viz } from "@/components/Viz";
 import { ASSESSMENT_LABELS, assessmentTone } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { ClaimItem } from "./ClaimItem";
+import { Tracks } from "./Tracks";
 
 export interface BlockProps {
   view: PageView;
@@ -68,14 +69,17 @@ function BlockBody({ block: b, view, selected, onSelect }: BlockProps & { block:
     case "prose":
       return <Markdown className={PROSE}>{b.markdown}</Markdown>;
     case "callout":
-      // A quiet note beside the reading, not a box: a thin rule, small sans text. Caution notes
-      // (how far to trust a source) keep a turmeric rule; "how we know" notes are ink.
+      // A quiet note beside the reading: small sans text. A plain note or a caution (how far to trust
+      // a source, with a turmeric rule) is an aside on the page; a "how we know" note is about the
+      // evidence, so it is cut into the page as a field, like the same line in a part's summary.
       return (
         <div
           role="note"
           className={cn(
-            "border-l-2 py-0.5 pl-4 font-sans text-note leading-snug text-ink-2",
-            b.tone === "caution" ? "border-turmeric/70" : "border-rule",
+            "font-sans text-note leading-snug text-ink-2",
+            b.tone === "method"
+              ? "field px-4 py-3"
+              : cn("border-l-2 py-0.5 pl-4", b.tone === "caution" ? "border-turmeric/70" : "border-rule"),
           )}
         >
           {b.tone === "method" && (
@@ -156,7 +160,7 @@ function BlockBody({ block: b, view, selected, onSelect }: BlockProps & { block:
               𑀤𑁂𑀯𑀸𑀦𑀁𑀧𑀺𑀬
             </span>
           )}
-          <blockquote className="relative pt-3 pr-14 font-serif text-lg leading-[1.55] text-ink [font-variation-settings:'opsz'_20]">
+          <blockquote className="relative pt-3 pr-6 font-serif text-lg leading-[1.5] text-ink sm:pr-14 sm:text-[1.3125rem] [font-variation-settings:'opsz'_20]">
             {e.quote}
           </blockquote>
           <figcaption className="mt-3 font-sans text-sm text-ink-2">
@@ -226,6 +230,8 @@ function BlockBody({ block: b, view, selected, onSelect }: BlockProps & { block:
           )}
         </figure>
       );
+    case "tracks":
+      return <Tracks block={b} view={view} selected={selected} onSelect={onSelect} />;
     case "guess":
       return <GuessQuestion block={b} view={view} />;
     case "check":
@@ -277,7 +283,7 @@ export function OftenSaid({
         onClick={() => onSelect(belief.id)}
         aria-pressed={selected === belief.id}
         className={cn(
-          "mt-2.5 rounded-md text-left font-serif text-lg leading-[1.45] text-ink italic transition-colors",
+          "mt-2.5 rounded-md text-left font-serif text-xl leading-[1.4] text-ink italic transition-colors sm:text-[1.4375rem]",
           selected === belief.id
             ? "underline decoration-indigo decoration-2 underline-offset-4"
             : "hover:text-ink/80",
@@ -292,11 +298,9 @@ export function OftenSaid({
       )}
       <BeliefTap blockId={b.id} claimId={belief.id} view={view} className="mt-3" />
       {b.correctionIds.length > 0 && (
-        <div className="mt-4 rounded-lg bg-paper/70 p-2 dark:bg-paper/40">
-          <p className="px-2 pt-1 font-sans text-sm font-semibold text-ink-2">
-            What the evidence shows
-          </p>
-          <ul className="mt-1 space-y-0.5">
+        <div className="mt-5 border-t border-rule pt-3">
+          <p className="font-sans text-sm font-semibold text-ink-2">What the evidence shows</p>
+          <ul className="-ml-4 mt-1 space-y-0.5">
             {b.correctionIds.map((id) => (
               <ClaimItem
                 key={id}
