@@ -67,4 +67,4 @@ tar -czf - -C deploy pramana.caddy static | "${SSH[@]}" 'set -e
 
 echo "== restart web"
 "${SSH[@]}" 'cd /opt/pramana && sudo docker compose -p pramana up -d && sudo docker image prune -f >/dev/null'
-"${SSH[@]}" 'for i in $(seq 1 60); do c=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3700/); [ "$c" = 200 ] && break; sleep 1; done; echo "web answers $c"'
+"${SSH[@]}" 'for i in $(seq 1 60); do c=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3700/); [ "$c" = 200 ] && break; sleep 1; done; echo "web answers $c"; [ "$c" = 200 ]'

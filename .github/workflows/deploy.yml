@@ -1,0 +1,77 @@
+# Every push to main: typecheck and test, then build the web image on the runner
+# and ship it to the Hetzner box (web-2) with deploy/deploy.sh. Nothing is built
+# on the box, which also runs movie-browser and kosh.
+name: Check and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('check-{0}', github.ref) || 'deploy-pramana' }}
+  # A newer push waits for a running deploy rather than cutting it off halfway.
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: pramana
+          POSTGRES_PASSWORD: pramana
+          POSTGRES_DB: pramana
+        ports: ["5442:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pramana"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://pramana:pramana@127.0.0.1:5442/pramana
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  deploy:
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://pramana.vootlachaitanya.com
+    steps:
+      - uses: actions/checkout@v4
+      - name: SSH key for the box
+        env:
+          KEY: ${{ secrets.PRAMANA_DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.PRAMANA_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/pramana_deploy
+          chmod 600 ~/.ssh/pramana_deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Build, ship and restart
+        run: PRAMANA_DEPLOY_KEY="$HOME/.ssh/pramana_deploy" bash deploy/deploy.sh
+      - name: Check the live site
+        run: |
+          for path in / /p/maurya-empire /privacy; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://pramana.vootlachaitanya.com$path")
+            echo "$path $code"
+            [ "$code" = 200 ] || exit 1
+          done
